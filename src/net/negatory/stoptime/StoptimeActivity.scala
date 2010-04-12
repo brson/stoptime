@@ -30,10 +30,18 @@ class StoptimeActivity extends ListActivity {
   }
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
-    case 0 =>
-      val intent = new Intent(this, classOf[EditorActivity])
-      startActivity(intent)
-      true
+    case 0 => newScene; true
     case _ => false
+  }
+
+  def newScene {
+    val sceneId = createScene
+
+    val intent = new Intent(this, classOf[EditorActivity])
+    startActivity(intent)
+  }
+
+  def createScene: Int = {
+    0
   }
 }
