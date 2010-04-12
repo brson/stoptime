@@ -2,9 +2,9 @@ package net.negatory.stoptime;
 
 import android.app.ListActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.{ListView, ArrayAdapter}
 import android.content.Intent
+import android.view.{MenuItem, Menu, View}
 
 class StoptimeActivity extends ListActivity {
   override def onCreate(savedInstanceState: Bundle)
@@ -21,7 +21,19 @@ class StoptimeActivity extends ListActivity {
     }
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
-    val intent = new Intent(this, classOf[EditorActivity])
-    startActivity(intent)
+    
+  }
+
+  override def onCreateOptionsMenu(menu: Menu): Boolean = {
+    menu.add(0, 0, 0, "New")
+    true
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+    case 0 =>
+      val intent = new Intent(this, classOf[EditorActivity])
+      startActivity(intent)
+      true
+    case _ => false
   }
 }
