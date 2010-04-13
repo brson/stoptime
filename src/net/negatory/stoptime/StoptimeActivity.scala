@@ -3,8 +3,21 @@ package net.negatory.stoptime;
 import android.app.ListActivity
 import android.os.Bundle
 import android.widget.{ListView, ArrayAdapter}
-import android.content.Intent
 import android.view.{MenuItem, Menu, View}
+import android.content.{Context, Intent}
+import android.database.sqlite.{SQLiteOpenHelper, SQLiteDatabase}
+
+class StoptimeOpenHelper(context: Context)
+  extends SQLiteOpenHelper(context, "stoptime", null, 1) {
+
+  override def onCreate(db: SQLiteDatabase) {
+    db.execSQL("create table scene (id integer primary key autoincrement)")
+  }
+
+  override def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    assert(false, "DB upgrade not implemented")
+  }
+}
 
 class StoptimeActivity extends ListActivity {
   override def onCreate(savedInstanceState: Bundle)
@@ -42,6 +55,14 @@ class StoptimeActivity extends ListActivity {
   }
 
   def createScene: Int = {
-    0
+    val dbHelper = new StoptimeOpenHelper(this)
+    val db = dbHelper.getWritableDatabase
+    db.execSQL("insert into scene default values")
+    val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
+    cursor.moveToNext
+    val newSceneId = cursor.getInt(0)
+    cursor.close
+    db.close
+    newSceneId
   }
 }
