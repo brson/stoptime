@@ -20,18 +20,17 @@ class StoptimeOpenHelper(context: Context)
 }
 
 class StoptimeActivity extends ListActivity {
-  override def onCreate(savedInstanceState: Bundle)
-    {
-      super.onCreate(savedInstanceState)
+  override def onCreate(savedInstanceState: Bundle) {
+    super.onCreate(savedInstanceState)
 
-      setListAdapter (
-        new ArrayAdapter [String] (
-          this,
-          android.R.layout.simple_list_item_1,
-          Array ("scene1", "scene2")
-          )
+    setListAdapter (
+      new ArrayAdapter [String] (
+        this,
+        android.R.layout.simple_list_item_1,
+        Array ("scene1", "scene2")
         )
-    }
+      )
+  }
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     
@@ -51,6 +50,7 @@ class StoptimeActivity extends ListActivity {
     val sceneId = createScene
 
     val intent = new Intent(this, classOf[EditorActivity])
+    intent.putExtra("sceneId", sceneId)
     startActivity(intent)
   }
 
