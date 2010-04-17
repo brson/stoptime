@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.graphics.PixelFormat
 import android.view.{SurfaceView, WindowManager, Window, SurfaceHolder}
 import android.hardware.Camera
+import collection.jcl.MutableIterator.Wrapper
+import android.util.Log
 
 class EditorActivity extends Activity with SurfaceHolder.Callback {
 
@@ -36,6 +38,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback {
 
   override def surfaceCreated(holder: SurfaceHolder) {
     camera = Camera.open
+    logHardwareStats
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -52,12 +55,36 @@ class EditorActivity extends Activity with SurfaceHolder.Callback {
 
     if (previewRunning) camera.stopPreview
 
-    // todo: why doesn't this work
-    val params/*: Camera.Parameters*/ = camera.getParameters
-    params.setPreviewSize(width, height)
+    // todo: wtf is up with this # syntax?
+    val params: Camera#Parameters = camera.getParameters
+    
     camera.setParameters(params)
     camera.setPreviewDisplay(holder)
     camera.startPreview
     previewRunning = true
+  }
+
+  def logHardwareStats {
+    val params/*: Camera.Parameters*/ = camera.getParameters
+
+    Log.i(getClass.getSimpleName, "Supported picture sizes:")
+    params.getSupportedPictureSizes match {
+      case supportedPictureSizes: List[Camera#Size] =>
+        for (size <- new Wrapper(supportedPictureSizes.iterator)) {
+          Log.i(getClass.getSimpleName, size.width + "x" + size.height)
+        }
+      // Emulator might return null
+      case null => Log.d(getClass.getSimpleName, "none")
+    }
+
+    Log.i(getClass.getSimpleName, "Supported preview sizes:")
+    params.getSupportedPreviewSizes match {
+      case supportedPreviewSizes: List[Camera#Size] =>
+        for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
+          Log.i(getClass.getSimpleName, size.width + "x" + size.height)
+        }
+      // Emulator might return null
+      case null => Log.d(getClass.getSimpleName, "none")
+    }
   }
 }
