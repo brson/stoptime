@@ -6,9 +6,8 @@ import android.graphics.PixelFormat
 import android.view.{SurfaceView, WindowManager, Window, SurfaceHolder}
 import android.hardware.Camera
 import collection.jcl.MutableIterator.Wrapper
-import android.util.Log
 
-class EditorActivity extends Activity with SurfaceHolder.Callback {
+class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private var surfaceView: SurfaceView = null
   private var surfaceHolder: SurfaceHolder = null
@@ -67,24 +66,24 @@ class EditorActivity extends Activity with SurfaceHolder.Callback {
   def logHardwareStats {
     val params/*: Camera.Parameters*/ = camera.getParameters
 
-    Log.i(getClass.getSimpleName, "Supported picture sizes:")
+    Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
       case supportedPictureSizes: List[Camera#Size] =>
         for (size <- new Wrapper(supportedPictureSizes.iterator)) {
-          Log.i(getClass.getSimpleName, size.width + "x" + size.height)
+          Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null
-      case null => Log.d(getClass.getSimpleName, "none")
+      case null => Log.i( "none")
     }
 
-    Log.i(getClass.getSimpleName, "Supported preview sizes:")
+    Log.i("Supported preview sizes:")
     params.getSupportedPreviewSizes match {
       case supportedPreviewSizes: List[Camera#Size] =>
         for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
-          Log.i(getClass.getSimpleName, size.width + "x" + size.height)
+          Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null
-      case null => Log.d(getClass.getSimpleName, "none")
+      case null => Log.i("none")
     }
   }
 }
