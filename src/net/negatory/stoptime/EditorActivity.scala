@@ -68,7 +68,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
-      case supportedPictureSizes: List[Camera#Size] =>
+      case supportedPictureSizes: java.util.List[Camera#Size] =>
         for (size <- new Wrapper(supportedPictureSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
@@ -78,7 +78,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     Log.i("Supported preview sizes:")
     params.getSupportedPreviewSizes match {
-      case supportedPreviewSizes: List[Camera#Size] =>
+      case supportedPreviewSizes: java.util.List[Camera#Size] =>
         for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
