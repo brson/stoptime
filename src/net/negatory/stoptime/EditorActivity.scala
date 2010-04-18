@@ -6,6 +6,7 @@ import android.graphics.PixelFormat
 import android.view.{SurfaceView, WindowManager, Window, SurfaceHolder}
 import android.hardware.Camera
 import collection.jcl.MutableIterator.Wrapper
+import android.view.ViewGroup.LayoutParams
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -40,6 +41,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     camera = Camera.open
     logHardwareStats
+
+    // todo: wtf is up with this # syntax?
+    /*val cameraParams: Camera#Parameters = camera.getParameters
+    val previewSize = calculatePreviewSize(cameraParams)
+    val layoutParams: LayoutParams = surfaceView.getLayoutParams
+    layoutParams.width = previewSize.width
+    layoutParams.height = previewSize.height
+    surfaceView.setLayoutParams(layoutParams) */
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -61,12 +70,9 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     if (previewRunning) camera.stopPreview
 
-    // todo: wtf is up with this # syntax?
-    val params: Camera#Parameters = camera.getParameters
-
-    val previewSize = calculatePreviewSize(params)
-    params.setPreviewSize(previewSize.width, previewSize.height)
-    camera.setParameters(params)
+    val cameraParams: Camera#Parameters = camera.getParameters
+    cameraParams.setPreviewSize(width, height)
+    camera.setParameters(cameraParams)
     camera.setPreviewDisplay(holder)
     camera.startPreview
     previewRunning = true
