@@ -22,7 +22,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     getWindow().setFlags(
       WindowManager.LayoutParams.FLAG_FULLSCREEN,
       WindowManager.LayoutParams.FLAG_FULLSCREEN)
-    setContentView(R.layout.camera_surface)
+    setContentView(R.layout.editor_layout)
 
     surfaceView = findViewById(R.id.surface_camera) match {
       case sv: SurfaceView => sv
@@ -36,14 +36,19 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
+    assert(camera == null)
+
     camera = Camera.open
     logHardwareStats
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
+    assert(camera != null)
+
     camera.stopPreview
     previewRunning = false
     camera.release
+    camera = null
   }
   
   override def surfaceChanged(
@@ -52,23 +57,43 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
           width: Int,
           height: Int) {
 
+    assert(camera != null)
+
     if (previewRunning) camera.stopPreview
 
     // todo: wtf is up with this # syntax?
     val params: Camera#Parameters = camera.getParameters
-    
+
+    val previewSize = calculatePreviewSize(params)
+    params.setPreviewSize(previewSize.width, previewSize.height)
     camera.setParameters(params)
     camera.setPreviewDisplay(holder)
     camera.startPreview
     previewRunning = true
   }
+               
+  def calculatePreviewSize(params: Camera#Parameters): Camera#Size = {
+    val default = new Camera#Size(camera, 200, 200)
+
+    val previewSize = params.getSupportedPreviewSizes match {
+      case supportedPictureSizes: java.util.List[_] =>
+        if (supportedPictureSizes.size > 0) supportedPictureSizes.get(0)
+        else default
+      case null => default
+    }
+
+    Log.i("Using preview size " + previewSize.width + "x" + previewSize.height)
+    previewSize
+  }
 
   def logHardwareStats {
+    assert(camera != null)
+
     val params/*: Camera.Parameters*/ = camera.getParameters
 
     Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
-      case supportedPictureSizes: java.util.List[Camera#Size] =>
+      case supportedPictureSizes: java.util.List[_] =>
         for (size <- new Wrapper(supportedPictureSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
@@ -78,7 +103,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     Log.i("Supported preview sizes:")
     params.getSupportedPreviewSizes match {
-      case supportedPreviewSizes: java.util.List[Camera#Size] =>
+      case supportedPreviewSizes: java.util.List[_] =>
         for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
@@ -86,4 +111,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case null => Log.i("none")
     }
   }
+
+
 }
