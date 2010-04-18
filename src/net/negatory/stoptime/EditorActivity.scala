@@ -73,6 +73,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
                
   def calculatePreviewSize(params: Camera#Parameters): Camera#Size = {
+    // what is the deal with this syntax? Why do I have to provide 'camera'
     val default = new Camera#Size(camera, 200, 200)
 
     val previewSize = params.getSupportedPreviewSizes match {
