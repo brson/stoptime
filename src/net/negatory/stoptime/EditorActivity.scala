@@ -34,6 +34,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     surfaceHolder.addCallback(this)
     // We'll manage the buffers
     surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
+
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
@@ -42,13 +43,16 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     camera = Camera.open
     logHardwareStats
 
+
     // todo: wtf is up with this # syntax?
     /*val cameraParams: Camera#Parameters = camera.getParameters
     val previewSize = calculatePreviewSize(cameraParams)
     val layoutParams: LayoutParams = surfaceView.getLayoutParams
     layoutParams.width = previewSize.width
     layoutParams.height = previewSize.height
-    surfaceView.setLayoutParams(layoutParams) */
+    surfaceView.setLayoutParams(layoutParams)*/
+
+    camera.setPreviewDisplay(holder)
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -68,12 +72,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     assert(camera != null)
 
+    Log.d("Surface changed, new size = " + width + "x" + height)
+    
     if (previewRunning) camera.stopPreview
 
     val cameraParams: Camera#Parameters = camera.getParameters
     cameraParams.setPreviewSize(width, height)
     camera.setParameters(cameraParams)
-    camera.setPreviewDisplay(holder)
+    //camera.setPreviewDisplay(holder)
     camera.startPreview
     previewRunning = true
   }
