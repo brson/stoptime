@@ -35,24 +35,22 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     // We'll manage the buffers
     surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
 
-  }
-
-  override def surfaceCreated(holder: SurfaceHolder) {
-    assert(camera == null)
-
-    camera = Camera.open
-    logHardwareStats
-
+    val camera = Camera.open
+    logHardwareStats(camera)
 
     // todo: wtf is up with this # syntax?
-    /*val cameraParams: Camera#Parameters = camera.getParameters
+    val cameraParams: Camera#Parameters = camera.getParameters
     val previewSize = calculatePreviewSize(cameraParams)
     val layoutParams: LayoutParams = surfaceView.getLayoutParams
     layoutParams.width = previewSize.width
     layoutParams.height = previewSize.height
-    surfaceView.setLayoutParams(layoutParams)*/
+    surfaceView.setLayoutParams(layoutParams)
 
-    camera.setPreviewDisplay(holder)
+    camera.release
+  }
+
+  override def surfaceCreated(holder: SurfaceHolder) {
+
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -70,16 +68,18 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
           width: Int,
           height: Int) {
 
-    assert(camera != null)
-
     Log.d("Surface changed, new size = " + width + "x" + height)
     
-    if (previewRunning) camera.stopPreview
+    if (previewRunning) {
+      camera.stopPreview
+      camera.release
+    }
 
+    camera = Camera.open
     val cameraParams: Camera#Parameters = camera.getParameters
     cameraParams.setPreviewSize(width, height)
     camera.setParameters(cameraParams)
-    //camera.setPreviewDisplay(holder)
+    camera.setPreviewDisplay(holder)
     camera.startPreview
     previewRunning = true
   }
@@ -90,7 +90,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     val previewSize = params.getSupportedPreviewSizes match {
       case supportedPictureSizes: java.util.List[_] =>
-        if (supportedPictureSizes.size > 0) supportedPictureSizes.get(0)
+        if (supportedPictureSizes.size > 1) supportedPictureSizes.get(1)
         else default
       case null => default
     }
@@ -99,8 +99,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     previewSize
   }
 
-  def logHardwareStats {
-    assert(camera != null)
+  def logHardwareStats(camera: Camera) {
 
     val params/*: Camera.Parameters*/ = camera.getParameters
 
