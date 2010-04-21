@@ -119,7 +119,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   def logHardwareStats(camera: Camera) {
 
-    val params/*: Camera.Parameters*/ = camera.getParameters
+    val params: Camera#Parameters = camera.getParameters
 
     Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
