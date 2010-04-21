@@ -3,10 +3,12 @@ package net.negatory.stoptime
 import android.app.Activity
 import android.os.Bundle
 import android.graphics.PixelFormat
-import android.view.{SurfaceView, WindowManager, Window, SurfaceHolder}
 import android.hardware.Camera
 import collection.jcl.MutableIterator.Wrapper
 import android.view.ViewGroup.LayoutParams
+import android.view._
+import android.content.res.Configuration
+import android.content.Context
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -38,12 +40,26 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val camera = Camera.open
     logHardwareStats(camera)
 
+    val wm: WindowManager = getSystemService(Context.WINDOW_SERVICE) match {
+      case wm: WindowManager => wm
+      case _ => throw new ClassCastException
+    }
+    val display = wm.getDefaultDisplay
+    val orientation = display.getOrientation
+    
     // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val previewSize = calculatePreviewSize(cameraParams)
     val layoutParams: LayoutParams = surfaceView.getLayoutParams
-    layoutParams.width = previewSize.width
-    layoutParams.height = previewSize.height
+
+    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+      layoutParams.width = previewSize.width
+      layoutParams.height = previewSize.height
+    }
+    else {
+      layoutParams.width = previewSize.height
+      layoutParams.height = previewSize.width
+    }
     surfaceView.setLayoutParams(layoutParams)
 
     camera.release
@@ -89,8 +105,9 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val default = new Camera#Size(camera, 200, 200)
 
     val previewSize = params.getSupportedPreviewSizes match {
-      case supportedPictureSizes: java.util.List[_] =>
-        if (supportedPictureSizes.size > 1) supportedPictureSizes.get(1)
+      case supportedPreviewSizes: java.util.List[_] =>
+        // my droid doesn't work with previewSize(0)
+        if (supportedPreviewSizes.size > 1) supportedPreviewSizes.get(1)
         else default
       case null => default
     }
