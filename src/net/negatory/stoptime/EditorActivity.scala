@@ -79,6 +79,8 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     cameraParams.setPreviewSize(width, height)
     val rotation = orientation match {
       case Configuration.ORIENTATION_PORTRAIT => 90
+      // Droid returns undefined in portrait mode?
+      case Configuration.ORIENTATION_UNDEFINED => 90
       case _ => 0
     }
     cameraParams.setRotation(rotation)
@@ -152,9 +154,11 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
     val display = wm.getDefaultDisplay
     display.getOrientation match {
-      case Configuration.ORIENTATION_PORTRAIT => Log.i("Orientation: portrait")
-      case Configuration.ORIENTATION_LANDSCAPE => Log.i("Orientation: landscape")
-      case otherOrientation => Log.i("Orientation: " + otherOrientation)
+      case Configuration.ORIENTATION_PORTRAIT => Log.d("Orientation: portrait")
+      case Configuration.ORIENTATION_LANDSCAPE => Log.d("Orientation: landscape")
+      case Configuration.ORIENTATION_SQUARE => Log.d("Orientation: square")
+      case Configuration.ORIENTATION_UNDEFINED => Log.d("Orientation: undefined")
+      case otherOrientation => Log.d("Orientation: " + otherOrientation)
     }
     display.getOrientation
   }
