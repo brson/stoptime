@@ -13,10 +13,8 @@ import android.content.Context
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   // todo: these should probably be Options
-  private var surfaceView: SurfaceView = null
-  private var surfaceHolder: SurfaceHolder = null
-  private var camera: Camera = null
-  private var previewRunning: Boolean = false
+  private var surfaceView: Option[SurfaceView] = None
+  private var camera: Option[Camera] = None
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -29,11 +27,12 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     setContentView(R.layout.editor_layout)
 
     surfaceView = findViewById(R.id.surface_camera) match {
-      case sv: SurfaceView => sv
-      case _ => throw new ClassCastException
+      case sv: SurfaceView => Some(sv)
+      case _ => error("Failed to find SurfaceView for camera")
     }
 
-    surfaceHolder = surfaceView.getHolder()
+    val surfaceHolder = (surfaceView get) getHolder
+
     surfaceHolder.addCallback(this)
     // We'll manage the buffers
     surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
@@ -41,7 +40,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val tmpCamera = Camera.open
     logHardwareStats(tmpCamera)
 
-    fitSurfaceToCamera(surfaceView, tmpCamera)
+    fitSurfaceToCamera(surfaceView.get, tmpCamera)
 
     tmpCamera.release
   }
@@ -52,12 +51,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
-    assert(camera != null)
 
-    camera.stopPreview
-    previewRunning = false
-    camera.release
-    camera = null
+    camera = camera match {
+      case Some(camera) =>
+        camera.stopPreview
+        camera.release
+        None
+      case None => error("Surface destroyed but no camera?")
+    }
   }
   
   override def surfaceChanged(
@@ -67,19 +68,19 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
           height: Int) {
 
     Log.d("Surface changed, new size = " + width + "x" + height)
-    
-    if (previewRunning) {
+
+    for (camera <- this.camera) {
       camera.stopPreview
       camera.release
     }
 
-    camera = Camera.open
+    val camera = Camera.open
     val cameraParams: Camera#Parameters = camera.getParameters
     cameraParams.setPreviewSize(width, height)
     camera.setParameters(cameraParams)
     camera.setPreviewDisplay(holder)
     camera.startPreview
-    previewRunning = true
+    this.camera = Some(camera)
   }
 
   private def fitSurfaceToCamera(surfaceView: SurfaceView, camera: Camera) {
@@ -119,19 +120,21 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   private def previewScale(params: Camera#Parameters): Float = {
-    // what is the deal with this syntax? Why do I have to provide 'camera'
-    val default = new Camera#Size(camera, 200, 150)
+    val default = (200, 150)
 
-    val previewSize = params.getSupportedPreviewSizes match {
+    val (previewWidth, previewHeight) = params.getSupportedPreviewSizes match {
       case supportedPreviewSizes: java.util.List[_] =>
         // my droid doesn't work with previewSize(0)
         // todo: there might be a better preview sie to select here
-        if (supportedPreviewSizes.size > 1) supportedPreviewSizes.get(1)
+        if (supportedPreviewSizes.size > 1) {
+          val size: Camera#Size  = supportedPreviewSizes.get(1)
+          (size.width, size.height)
+        }
         else default
       case null => default
     }
 
-    val previewScale: Float = previewSize.width / previewSize.height
+    val previewScale: Float = previewWidth / previewHeight
 
     Log.d("Preview scale: " + previewScale)
     previewScale
