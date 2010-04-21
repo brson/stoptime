@@ -67,6 +67,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   override def surfaceCreated(holder: SurfaceHolder) {
 
+    // todo move camera opening here, but make sure it works on hardware
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
