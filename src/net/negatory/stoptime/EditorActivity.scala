@@ -40,7 +40,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val tmpCamera = Camera.open
     logHardwareStats(tmpCamera)
 
-    fitSurfaceToCamera(surfaceView.get, tmpCamera)
+    setLayoutParams(surfaceView.get, tmpCamera)
 
     tmpCamera.release
   }
@@ -77,13 +77,18 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val camera = Camera.open
     val cameraParams: Camera#Parameters = camera.getParameters
     cameraParams.setPreviewSize(width, height)
+    val rotation = orientation match {
+      case Configuration.ORIENTATION_PORTRAIT => 90
+      case _ => 0
+    }
+    cameraParams.setRotation(rotation)
     camera.setParameters(cameraParams)
     camera.setPreviewDisplay(holder)
     camera.startPreview
     this.camera = Some(camera)
   }
 
-  private def fitSurfaceToCamera(surfaceView: SurfaceView, camera: Camera) {
+  private def setLayoutParams(surfaceView: SurfaceView, camera: Camera) {
         // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
@@ -146,6 +151,11 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => throw new ClassCastException
     }
     val display = wm.getDefaultDisplay
+    display.getOrientation match {
+      case Configuration.ORIENTATION_PORTRAIT => Log.i("Orientation: portrait")
+      case Configuration.ORIENTATION_LANDSCAPE => Log.i("Orientation: landscape")
+      case otherOrientation => Log.i("Orientation: " + otherOrientation)
+    }
     display.getOrientation
   }
 
