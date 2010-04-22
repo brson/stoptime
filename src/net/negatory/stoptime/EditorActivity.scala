@@ -9,6 +9,7 @@ import android.view.ViewGroup.LayoutParams
 import android.view._
 import android.content.res.Configuration
 import android.content.Context
+import android.content.pm.ActivityInfo
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -24,6 +25,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     getWindow().setFlags(
       WindowManager.LayoutParams.FLAG_FULLSCREEN,
       WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     setContentView(R.layout.editor_layout)
 
     surfaceView = findViewById(R.id.surface_camera) match {
@@ -77,13 +79,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val camera = Camera.open
     val cameraParams: Camera#Parameters = camera.getParameters
     cameraParams.setPreviewSize(width, height)
-    val rotation = orientation match {
-      case Configuration.ORIENTATION_PORTRAIT => 90
-      // Droid returns undefined in portrait mode?
-      case Configuration.ORIENTATION_UNDEFINED => 90
-      case _ => 0
-    }
-    cameraParams.setRotation(rotation)
     camera.setParameters(cameraParams)
     camera.setPreviewDisplay(holder)
     camera.startPreview
@@ -100,6 +95,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     surfaceView.setLayoutParams(layoutParams)
   }
 
+  // I think a lot of this is unnecessary since we're forcing landscape mode
   private def calculatePreviewSize(params: Camera#Parameters): (Int, Int) = {
     val previewScale = this.previewScale(params)
     val mustRotate =
