@@ -43,6 +43,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val tmpCamera = Camera.open
     logHardwareStats(tmpCamera)
 
+    // Configure the SurfaceView for the camera preview
     new PreviewCalculator(this).setLayoutParams(surfaceView.get, tmpCamera)
 
     tmpCamera.release
