@@ -129,16 +129,18 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   private def takeSnapshot: Unit = {
-    // I don't know how to reference the outer scope from within the listeners,
-    // so I'm making a 'this' variable
-    val activity = this
 
     val shutterListener = new Camera.ShutterCallback {
-      def onShutter = activity.onShutter
+      def onShutter: Unit = {
+        Log.d("onShutter")
+      }
     }
 
     val jpegListener = new Camera.PictureCallback {
-      def onPictureTaken(data: Array[Byte], camera: Camera): Unit = activity.onPictureTaken(data, camera)
+      def onPictureTaken(data: Array[Byte], camera: Camera): Unit = {
+        Log.d("Picture taken")
+        camera.startPreview
+      }
     }
 
     camera match {
@@ -154,14 +156,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
   }
 
-  private def onShutter: Unit = {
-    Log.d("onShutter")
-  }
-
-  private def onPictureTaken(data: Array[Byte], camera: Camera): Unit = {
-    Log.d("Picture taken")
-    camera.startPreview
-  }
 }
 
 
