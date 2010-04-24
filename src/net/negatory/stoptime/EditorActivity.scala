@@ -60,7 +60,9 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   override def surfaceCreated(holder: SurfaceHolder) {
 
-    // todo move camera opening here, but make sure it works on hardware
+    assert(camera isEmpty)
+    camera = Some(Camera.open)
+    // todo: Check for errors
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -82,18 +84,18 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     Log.d("Surface changed, new size = " + width + "x" + height)
 
-    for (camera <- this.camera) {
-      camera.stopPreview
-      camera.release
+    camera = camera match {
+      case Some(camera) =>
+        camera.stopPreview
+        val cameraParams: Camera#Parameters = camera.getParameters
+        cameraParams.setPreviewSize(width, height)
+        camera.setParameters(cameraParams)
+        camera.setPreviewDisplay(holder)
+        camera.startPreview
+        Some(camera)
+      case None => error("Surface changed but no camera?")
     }
 
-    val camera = Camera.open
-    val cameraParams: Camera#Parameters = camera.getParameters
-    cameraParams.setPreviewSize(width, height)
-    camera.setParameters(cameraParams)
-    camera.setPreviewDisplay(holder)
-    camera.startPreview
-    this.camera = Some(camera)
   }
 
   def logHardwareStats(camera: Camera) {
