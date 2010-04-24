@@ -13,7 +13,6 @@ import android.content.pm.ActivityInfo
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
-  // todo: these should probably be Options
   private var surfaceView: Option[SurfaceView] = None
   private var camera: Option[Camera] = None
 
