@@ -15,12 +15,9 @@ import android.view.View.OnClickListener
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
-  private var surfaceView: SurfaceView = null
   private var camera: Option[Camera] = None
 
   override def onCreate(savedInstanceState: Bundle) {
-
-    assert(surfaceView == null)
 
     super.onCreate(savedInstanceState)
 
@@ -32,7 +29,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     setContentView(R.layout.editor_layout)
 
-    surfaceView = findViewById(R.id.surface_camera) match {
+    findViewById(R.id.surface_camera) match {
       case sv: SurfaceView =>
 
         // Configure the surface holder
@@ -50,7 +47,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         new PreviewCalculator(this).setLayoutParams(sv, tmpCamera)
 
         tmpCamera.release
-        sv
       case _ => error("Failed to find SurfaceView for camera")
     }
 
@@ -62,9 +58,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         })
       case _ => error("Failed to find snapshot Button")
     }
-
-
-
 
   }
 
