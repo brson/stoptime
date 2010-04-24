@@ -10,6 +10,8 @@ import android.view._
 import android.content.res.Configuration
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.widget.Button
+import android.view.View.OnClickListener
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -44,6 +46,17 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     setLayoutParams(surfaceView.get, tmpCamera)
 
     tmpCamera.release
+
+    val snapshotButton: View = findViewById(R.id.snapshot_button) match {
+      case sb: Button => sb
+      case _ => error("Failed to find snapshot Button")
+    }
+
+    snapshotButton.setOnClickListener(new OnClickListener {
+      def onClick(view: View) {
+         Log.i("CLICKY!")
+      }
+    })
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
