@@ -15,10 +15,13 @@ import android.view.View.OnClickListener
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
-  private var surfaceView: Option[SurfaceView] = None
+  private var surfaceView: SurfaceView = null
   private var camera: Option[Camera] = None
 
   override def onCreate(savedInstanceState: Bundle) {
+
+    assert(surfaceView == null)
+
     super.onCreate(savedInstanceState)
 
     getWindow().setFormat(PixelFormat.TRANSLUCENT)
@@ -37,7 +40,17 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         surfaceHolder.addCallback(this)
         // We'll manage the buffers
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
-        Some(sv)
+
+        // TODO: It would be nice not to have to open the camera here
+        // Can setting the surface view layout params be deferred?
+        val tmpCamera = Camera.open
+        logHardwareStats(tmpCamera)
+
+        // Configure the SurfaceView for the camera preview
+        new PreviewCalculator(this).setLayoutParams(sv, tmpCamera)
+
+        tmpCamera.release
+        sv
       case _ => error("Failed to find SurfaceView for camera")
     }
 
@@ -51,15 +64,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
 
 
-    // TODO: It would be nice not to have to open the camera here
-    // Can setting the surface view layout params be deferred?
-    val tmpCamera = Camera.open
-    logHardwareStats(tmpCamera)
 
-    // Configure the SurfaceView for the camera preview
-    new PreviewCalculator(this).setLayoutParams(surfaceView.get, tmpCamera)
-
-    tmpCamera.release
 
   }
 
