@@ -43,7 +43,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val tmpCamera = Camera.open
     logHardwareStats(tmpCamera)
 
-    setLayoutParams(surfaceView.get, tmpCamera)
+    new PreviewCalculator(this).setLayoutParams(surfaceView.get, tmpCamera)
 
     tmpCamera.release
 
@@ -53,9 +53,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
 
     snapshotButton.setOnClickListener(new OnClickListener {
-      def onClick(view: View) {
-         Log.i("CLICKY!")
-      }
+      def onClick(view: View) = takeSnapshot
     })
   }
 
@@ -97,7 +95,40 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     this.camera = Some(camera)
   }
 
-  private def setLayoutParams(surfaceView: SurfaceView, camera: Camera) {
+  def logHardwareStats(camera: Camera) {
+
+    val params: Camera#Parameters = camera.getParameters
+
+    Log.i("Supported picture sizes:")
+    params.getSupportedPictureSizes match {
+      case supportedPictureSizes: java.util.List[_] =>
+        for (size <- new Wrapper(supportedPictureSizes.iterator)) {
+          Log.i(size.width + "x" + size.height)
+        }
+      // Emulator might return null
+      case null => Log.i( "none")
+    }
+
+    Log.i("Supported preview sizes:")
+    params.getSupportedPreviewSizes match {
+      case supportedPreviewSizes: java.util.List[_] =>
+        for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
+          Log.i(size.width + "x" + size.height)
+        }
+      // Emulator might return null
+      case null => Log.i("none")
+    }
+  }
+
+  private def takeSnapshot: Unit = {
+    
+  }
+}
+
+
+class PreviewCalculator(activity: Activity) extends Object with Logging {
+
+    def setLayoutParams(surfaceView: SurfaceView, camera: Camera) {
         // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
@@ -108,7 +139,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   // I think a lot of this is unnecessary since we're forcing landscape mode
-  private def calculatePreviewSize(params: Camera#Parameters): (Int, Int) = {
+  def calculatePreviewSize(params: Camera#Parameters): (Int, Int) = {
     val previewScale = this.previewScale(params)
     val mustRotate =
       (previewScale > 1 && orientation == Configuration.ORIENTATION_PORTRAIT) ||
@@ -156,7 +187,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   private def orientation: Int = {
-    val wm: WindowManager = getSystemService(Context.WINDOW_SERVICE) match {
+    val wm: WindowManager = activity.getSystemService(Context.WINDOW_SERVICE) match {
       case wm: WindowManager => wm
       case _ => throw new ClassCastException
     }
@@ -173,34 +204,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private def maxPreviewSize: (Int, Int) = {
 
-    val display = getWindowManager.getDefaultDisplay
+    val display = activity.getWindowManager.getDefaultDisplay
     (display.getWidth, display.getHeight)
   }
-
-  def logHardwareStats(camera: Camera) {
-
-    val params: Camera#Parameters = camera.getParameters
-
-    Log.i("Supported picture sizes:")
-    params.getSupportedPictureSizes match {
-      case supportedPictureSizes: java.util.List[_] =>
-        for (size <- new Wrapper(supportedPictureSizes.iterator)) {
-          Log.i(size.width + "x" + size.height)
-        }
-      // Emulator might return null
-      case null => Log.i( "none")
-    }
-
-    Log.i("Supported preview sizes:")
-    params.getSupportedPreviewSizes match {
-      case supportedPreviewSizes: java.util.List[_] =>
-        for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
-          Log.i(size.width + "x" + size.height)
-        }
-      // Emulator might return null
-      case null => Log.i("none")
-    }
-  }
-
-
 }
