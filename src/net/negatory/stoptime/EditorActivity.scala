@@ -30,16 +30,29 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     setContentView(R.layout.editor_layout)
 
     surfaceView = findViewById(R.id.surface_camera) match {
-      case sv: SurfaceView => Some(sv)
+      case sv: SurfaceView =>
+
+        // Configure the surface holder
+        val surfaceHolder = sv.getHolder
+        surfaceHolder.addCallback(this)
+        // We'll manage the buffers
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
+        Some(sv)
       case _ => error("Failed to find SurfaceView for camera")
     }
 
-    val surfaceHolder = (surfaceView get) getHolder
 
-    surfaceHolder.addCallback(this)
-    // We'll manage the buffers
-    surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
+    findViewById(R.id.snapshot_button) match {
+      case snapshotButton: Button =>
+        snapshotButton.setOnClickListener(new OnClickListener {
+          def onClick(view: View) = takeSnapshot
+        })
+      case _ => error("Failed to find snapshot Button")
+    }
 
+
+    // TODO: It would be nice not to have to open the camera here
+    // Can setting the surface view layout params be deferred?
     val tmpCamera = Camera.open
     logHardwareStats(tmpCamera)
 
@@ -48,14 +61,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     tmpCamera.release
 
-    val snapshotButton: View = findViewById(R.id.snapshot_button) match {
-      case sb: Button => sb
-      case _ => error("Failed to find snapshot Button")
-    }
-
-    snapshotButton.setOnClickListener(new OnClickListener {
-      def onClick(view: View) = takeSnapshot
-    })
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
