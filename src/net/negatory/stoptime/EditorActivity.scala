@@ -122,7 +122,38 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   private def takeSnapshot: Unit = {
-    
+    // I don't know how to reference the outer scope from within the listeners,
+    // so I'm making a 'this' variable
+    val activity = this
+
+    val shutterListener = new Camera.ShutterCallback {
+      def onShutter = activity.onShutter
+    }
+
+    val jpegListener = new Camera.PictureCallback {
+      def onPictureTaken(data: Array[Byte], camera: Camera): Unit = activity.onPictureTaken(data, camera)
+    }
+
+    camera match {
+      case Some(camera) =>
+        camera.takePicture(
+          shutterListener,
+          null,
+          jpegListener
+        )
+      // Do nothing if we don't have a camera. This allows us to leave the snapshot button enabled
+      // even when we don't have a camera.
+      case None => ()
+    }
+  }
+
+  private def onShutter: Unit = {
+    Log.d("onShutter")
+  }
+
+  private def onPictureTaken(data: Array[Byte], camera: Camera): Unit = {
+    Log.d("Picture taken")
+    camera.startPreview
   }
 }
 
