@@ -1,13 +1,27 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="fill_parent" android:layout_height="fill_parent">
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent">
 
-    <FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent">
+    <FrameLayout android:layout_width="fill_parent"
+                 android:layout_height="fill_parent">
+
         <SurfaceView android:id="@+id/surface_camera"
-                     android:layout_width="100dip" android:layout_height="100dip"
-                     android:layout_weight="1" android:layout_gravity="center">
+                     android:layout_width="100dip"
+                     android:layout_height="100dip"
+                     android:layout_weight="1"
+                     android:layout_gravity="center">
         </SurfaceView>
-        <Button android:id="@+id/snapshot_button"
-                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Test"/>
+
     </FrameLayout>
+
+    <FrameLayout android:layout_width="fill_parent"
+                 android:layout_height="fill_parent">
+
+
+
+    </FrameLayout>
+
+    <Button android:id="@+id/snapshot_button"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Test"/>
 
 </FrameLayout>
