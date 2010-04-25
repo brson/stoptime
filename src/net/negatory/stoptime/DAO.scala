@@ -19,10 +19,11 @@ private object StoptimeOpenHelper {
   val version: Int = 1
 }
 
-class DAO(context: Context) {
+class DAO(context: Context) extends AnyRef with Logging {
 
   def newScene: Scene = {
-    new Scene
+    val sceneId = createScene
+    loadScene(sceneId)
   }
 
   private def createScene: Int = {
@@ -32,12 +33,14 @@ class DAO(context: Context) {
     val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
     cursor.moveToNext
     val newSceneId = cursor.getInt(0)
+    Log.d("Created new scene with id = " + newSceneId)
     cursor.close
     db.close
     newSceneId
   }
 
   private def loadScene(sceneId: Int): Scene = {
-    new Scene
+    // TODO
+    new Scene(sceneId)
   }
 }

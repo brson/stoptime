@@ -12,10 +12,13 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.widget.Button
 import android.view.View.OnClickListener
+import Scene._
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private var camera: Option[Camera] = None
+  private var sceneStore: SceneStore = new SceneStore(this)
+  private var scene: Scene = DefaultScene
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -137,6 +140,11 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     val jpegListener = new Camera.PictureCallback {
       def onPictureTaken(data: Array[Byte], camera: Camera): Unit = {
         Log.d("Picture taken")
+
+        scene = initializeScene
+
+        scene.appendFrame(data)
+
         camera.startPreview
       }
     }
@@ -154,10 +162,12 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
   }
 
+  private def initializeScene: Scene = if (scene == DefaultScene) sceneStore.newScene else scene
+
 }
 
 
-class PreviewCalculator(activity: Activity) extends Object with Logging {
+class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
 
     def setLayoutParams(surfaceView: SurfaceView, camera: Camera) {
         // todo: wtf is up with this # syntax?
