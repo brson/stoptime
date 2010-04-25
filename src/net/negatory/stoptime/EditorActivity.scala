@@ -4,7 +4,6 @@ import android.app.Activity
 import android.os.Bundle
 import android.graphics.PixelFormat
 import android.hardware.Camera
-import collection.jcl.MutableIterator.Wrapper
 import android.view.ViewGroup.LayoutParams
 import android.view._
 import android.content.res.Configuration
@@ -12,13 +11,13 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.widget.Button
 import android.view.View.OnClickListener
-import Scene._
+import collection.jcl.MutableIterator
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private var camera: Option[Camera] = None
   private var sceneStore: SceneStore = new SceneStore(this)
-  private var scene: Scene = DefaultScene
+  private var scene: Scene = Scene.DefaultScene
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -111,7 +110,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
       case supportedPictureSizes: java.util.List[_] =>
-        for (size <- new Wrapper(supportedPictureSizes.iterator)) {
+        for (size <- new MutableIterator.Wrapper(supportedPictureSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null
@@ -121,7 +120,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     Log.i("Supported preview sizes:")
     params.getSupportedPreviewSizes match {
       case supportedPreviewSizes: java.util.List[_] =>
-        for (size <- new Wrapper(supportedPreviewSizes.iterator)) {
+        for (size <- new MutableIterator.Wrapper(supportedPreviewSizes.iterator)) {
           Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null
@@ -162,7 +161,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
   }
 
-  private def initializeScene: Scene = if (scene == DefaultScene) sceneStore.newScene else scene
+  private def initializeScene: Scene = if (scene == Scene.DefaultScene) sceneStore.newScene else scene
 
 }
 
