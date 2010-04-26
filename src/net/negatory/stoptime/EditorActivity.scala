@@ -18,6 +18,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   private var camera: Option[Camera] = None
   private var sceneStore: SceneStore = new SceneStore(this)
   private var scene: Scene = Scene.DefaultScene
+  private var previewSurface: SurfaceView = null
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -31,7 +32,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
     setContentView(R.layout.editor_layout)
 
-    findViewById(R.id.surface_camera) match {
+    previewSurface = findViewById(R.id.surface_camera) match {
       case sv: SurfaceView =>
 
         // Configure the surface holder
@@ -42,13 +43,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
         // TODO: It would be nice not to have to open the camera here
         // Can setting the surface view layout params be deferred?
-        val tmpCamera = Camera.open
+        /*val tmpCamera = Camera.open
         logHardwareStats(tmpCamera)
 
         // Configure the SurfaceView for the camera preview
         new PreviewCalculator(this).setLayoutParams(sv, tmpCamera)
 
-        tmpCamera.release
+        tmpCamera.release*/
+        sv
       case _ => error("Failed to find SurfaceView for camera")
     }
 
@@ -66,7 +68,11 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   override def surfaceCreated(holder: SurfaceHolder) {
 
     assert(camera isEmpty)
-    camera = Some(Camera.open)
+    camera = Camera.open match {
+      case camera =>
+        new PreviewCalculator(this).setLayoutParams(previewSurface, camera)
+        Some(camera)
+    }
     // todo: Check for errors
   }
 
