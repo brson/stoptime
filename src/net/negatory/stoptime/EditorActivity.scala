@@ -2,16 +2,16 @@ package net.negatory.stoptime
 
 import android.app.Activity
 import android.os.Bundle
-import android.graphics.PixelFormat
 import android.hardware.Camera
 import android.view.ViewGroup.LayoutParams
 import android.view._
 import android.content.res.Configuration
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.widget.Button
 import android.view.View.OnClickListener
 import collection.jcl.MutableIterator
+import android.widget.{ImageView, Button}
+import android.graphics.{BitmapFactory, PixelFormat}
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -19,6 +19,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   private var sceneStore: SceneStore = new SceneStore(this)
   private var scene: Scene = Scene.DefaultScene
   private var previewSurface: SurfaceView = null
+  private var frameImage: ImageView = null
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -44,6 +45,13 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => error("Failed to find SurfaceView for camera")
     }
 
+    frameImage = findViewById(R.id.image_frame) match {
+      case iv: ImageView =>
+        iv.setAlpha(127)
+        iv
+      case _ => error("Failed to find ImageView for frame display")  
+    }
+
 
     findViewById(R.id.snapshot_button) match {
       case snapshotButton: Button =>
@@ -60,14 +68,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     assert(camera isEmpty)
     camera = Camera.open match {
       case camera =>
-        configureSurfaceAndCamera(previewSurface, camera)
+        configureCameraAndViewDimensions(previewSurface, frameImage, camera)
         Some(camera)
     }
     // todo: Check for errors
   }
 
-  def configureSurfaceAndCamera(surfaceView: SurfaceView, camera: Camera) {
-    new PreviewCalculator(this).setLayoutParams(previewSurface, camera)
+  def configureCameraAndViewDimensions(surfaceView: SurfaceView, frameImage: ImageView, camera: Camera) {
+    new PreviewCalculator(this).setLayoutParams(surfaceView, frameImage, camera)
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -143,6 +151,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         scene = initializeScene
 
         scene.appendFrame(data)
+        frameImage.setImageBitmap(BitmapFactory.decodeByteArray(data, 0, data.length))
 
         camera.startPreview
       }
@@ -168,14 +177,18 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
 class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
 
-    def setLayoutParams(surfaceView: SurfaceView, camera: Camera) {
+  def setLayoutParams(surfaceView: SurfaceView, frameImage: ImageView, camera: Camera) {
         // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
-    val layoutParams: LayoutParams = surfaceView.getLayoutParams
-    layoutParams.width = previewWidth
-    layoutParams.height = previewHeight
-    surfaceView.setLayoutParams(layoutParams)
+    val svLayoutParams: LayoutParams = surfaceView.getLayoutParams
+    svLayoutParams.width = previewWidth
+    svLayoutParams.height = previewHeight
+    surfaceView.setLayoutParams(svLayoutParams)
+    val ivLayoutParams: LayoutParams = frameImage.getLayoutParams
+    ivLayoutParams.width = previewWidth
+    ivLayoutParams.height = previewHeight
+    frameImage.setLayoutParams(ivLayoutParams)
   }
 
   // I think a lot of this is unnecessary since we're forcing landscape mode
