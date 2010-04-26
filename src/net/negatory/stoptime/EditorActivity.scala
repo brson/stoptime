@@ -40,16 +40,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         surfaceHolder.addCallback(this)
         // We'll manage the buffers
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS)
-
-        // TODO: It would be nice not to have to open the camera here
-        // Can setting the surface view layout params be deferred?
-        /*val tmpCamera = Camera.open
-        logHardwareStats(tmpCamera)
-
-        // Configure the SurfaceView for the camera preview
-        new PreviewCalculator(this).setLayoutParams(sv, tmpCamera)
-
-        tmpCamera.release*/
         sv
       case _ => error("Failed to find SurfaceView for camera")
     }
@@ -70,10 +60,14 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     assert(camera isEmpty)
     camera = Camera.open match {
       case camera =>
-        new PreviewCalculator(this).setLayoutParams(previewSurface, camera)
+        configureSurfaceAndCamera(previewSurface, camera)
         Some(camera)
     }
     // todo: Check for errors
+  }
+
+  def configureSurfaceAndCamera(surfaceView: SurfaceView, camera: Camera) {
+    new PreviewCalculator(this).setLayoutParams(previewSurface, camera)
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
