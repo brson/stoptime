@@ -61,6 +61,20 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => error("Failed to find snapshot Button")
     }
 
+    findViewById(R.id.overlay_button) match {
+      case b: Button =>
+        b.setOnClickListener(new OnClickListener {
+          def onClick(v: View) {
+            frameImage.setVisibility(frameImage.getVisibility match {
+              case View.INVISIBLE => View.VISIBLE
+              case View.VISIBLE => View.INVISIBLE
+              case _ => error("Unexpected overlay visibility")
+            })
+          }
+        })
+      case _ => error("Failed to find overlay Button")
+    }
+
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
