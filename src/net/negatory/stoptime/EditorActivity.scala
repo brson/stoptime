@@ -47,7 +47,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     frameImage = findViewById(R.id.image_frame) match {
       case iv: ImageView =>
-        iv.setAlpha(127)
+        iv.setAlpha(64)
         iv
       case _ => error("Failed to find ImageView for frame display")  
     }
@@ -134,6 +134,9 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       // Emulator might return null
       case null => Log.i("none")
     }
+
+    val display = getWindowManager.getDefaultDisplay
+    Log.i("Display size: " + display.getWidth + "x" + display.getHeight)
   }
 
   private def takeSnapshot: Unit = {
@@ -178,7 +181,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
 
   def setLayoutParams(surfaceView: SurfaceView, frameImage: ImageView, camera: Camera) {
-        // todo: wtf is up with this # syntax?
+    // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
     val svLayoutParams: LayoutParams = surfaceView.getLayoutParams
@@ -191,68 +194,19 @@ class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
     frameImage.setLayoutParams(ivLayoutParams)
   }
 
-  // I think a lot of this is unnecessary since we're forcing landscape mode
   def calculatePreviewSize(params: Camera#Parameters): (Int, Int) = {
-    val previewScale = this.previewScale(params)
-    val mustRotate =
-      (previewScale > 1 && orientation == Configuration.ORIENTATION_PORTRAIT) ||
-      (previewScale < 1 && orientation == Configuration.ORIENTATION_LANDSCAPE)
 
-    if (mustRotate)
-      Log.d("Rotating preview")
-    else
-      Log.d("Not rotating preview")
+    val default = maxPreviewSize
 
-    val realPreviewScale = if (!mustRotate) previewScale else 1 / previewScale
-
-    val (maxWidth, maxHeight) = maxPreviewSize
-    val frameScale: Float = maxWidth / maxHeight
-    // Maximize the preview size on the screen while keeping the surface scaled correctly
-    val previewSize: (Int, Int) = {
-      if (realPreviewScale < frameScale) ((maxHeight.toFloat * realPreviewScale).toInt, maxHeight)
-      else (maxWidth, (maxHeight.toFloat / realPreviewScale).toInt)
-    }
-
-    val (previewWidth, previewHeight) = previewSize
-    Log.i("Using preview size " + previewWidth + "x" + previewHeight)
-    previewSize
-  }
-
-  private def previewScale(params: Camera#Parameters): Float = {
-    val default = (200, 150)
-
-    val (previewWidth, previewHeight) = params.getSupportedPreviewSizes match {
+    params.getSupportedPreviewSizes match {
       case supportedPreviewSizes: java.util.List[_] =>
-        // my droid doesn't work with previewSize(0)
-        // todo: there might be a better preview sie to select here
-        if (supportedPreviewSizes.size > 1) {
-          val size: Camera#Size  = supportedPreviewSizes.get(1)
-          (size.width, size.height)
+        if (supportedPreviewSizes.size > 0) {
+          val previewSize = supportedPreviewSizes.get(supportedPreviewSizes.size - 1)
+          (previewSize.width, previewSize.height)
         }
         else default
       case null => default
     }
-
-    val previewScale: Float = previewWidth / previewHeight
-
-    Log.d("Preview scale: " + previewScale)
-    previewScale
-  }
-
-  private def orientation: Int = {
-    val wm: WindowManager = activity.getSystemService(Context.WINDOW_SERVICE) match {
-      case wm: WindowManager => wm
-      case _ => throw new ClassCastException
-    }
-    val display = wm.getDefaultDisplay
-    display.getOrientation match {
-      case Configuration.ORIENTATION_PORTRAIT => Log.d("Orientation: portrait")
-      case Configuration.ORIENTATION_LANDSCAPE => Log.d("Orientation: landscape")
-      case Configuration.ORIENTATION_SQUARE => Log.d("Orientation: square")
-      case Configuration.ORIENTATION_UNDEFINED => Log.d("Orientation: undefined")
-      case otherOrientation => Log.d("Orientation: " + otherOrientation)
-    }
-    display.getOrientation
   }
 
   private def maxPreviewSize: (Int, Int) = {
