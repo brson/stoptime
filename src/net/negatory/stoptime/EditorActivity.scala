@@ -82,6 +82,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     assert(camera isEmpty)
     camera = Camera.open match {
       case camera =>
+        logHardwareStats(camera)
         configureCameraAndViewDimensions(previewSurface, frameImage, camera)
         Some(camera)
     }
@@ -198,6 +199,7 @@ class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
     // todo: wtf is up with this # syntax?
     val cameraParams: Camera#Parameters = camera.getParameters
     val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
+    Log.i("Using preview size " + previewWidth + "x" + previewHeight)
     val svLayoutParams: LayoutParams = surfaceView.getLayoutParams
     svLayoutParams.width = previewWidth
     svLayoutParams.height = previewHeight
@@ -212,15 +214,7 @@ class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
 
     val default = maxPreviewSize
 
-    params.getSupportedPreviewSizes match {
-      case supportedPreviewSizes: java.util.List[_] =>
-        if (supportedPreviewSizes.size > 0) {
-          val previewSize = supportedPreviewSizes.get(supportedPreviewSizes.size - 1)
-          (previewSize.width, previewSize.height)
-        }
-        else default
-      case null => default
-    }
+    default
   }
 
   private def maxPreviewSize: (Int, Int) = {
