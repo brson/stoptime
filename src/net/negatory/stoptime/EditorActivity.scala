@@ -11,7 +11,7 @@ import android.content.pm.ActivityInfo
 import android.view.View.OnClickListener
 import collection.jcl.MutableIterator
 import android.widget.{ImageView, Button}
-import android.graphics.{BitmapFactory, PixelFormat}
+import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -19,7 +19,8 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   private var sceneStore: SceneStore = new SceneStore(this)
   private var scene: Scene = Scene.DefaultScene
   private var previewSurface: SurfaceView = null
-  private var frameImage: ImageView = null
+  private var overlayView: ImageView = null
+  private var overlayBitmap: Option[Bitmap] = None
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -45,7 +46,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => error("Failed to find SurfaceView for camera")
     }
 
-    frameImage = findViewById(R.id.image_frame) match {
+    overlayView = findViewById(R.id.image_frame) match {
       case iv: ImageView =>
         iv.setAlpha(64)
         iv
@@ -65,7 +66,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case b: Button =>
         b.setOnClickListener(new OnClickListener {
           def onClick(v: View) {
-            frameImage.setVisibility(frameImage.getVisibility match {
+            overlayView.setVisibility(overlayView.getVisibility match {
               case View.INVISIBLE => View.VISIBLE
               case View.VISIBLE => View.INVISIBLE
               case _ => error("Unexpected overlay visibility")
@@ -83,7 +84,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     camera = Camera.open match {
       case camera =>
         logHardwareStats(camera)
-        configureCameraAndViewDimensions(previewSurface, frameImage, camera)
+        configureCameraAndViewDimensions(previewSurface, overlayView, camera)
         Some(camera)
     }
     // todo: Check for errors
@@ -208,7 +209,13 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         scene = initializeScene
 
         scene.appendFrame(data)
-        frameImage.setImageBitmap(BitmapFactory.decodeByteArray(data, 0, data.length))
+
+        val newBitmap = BitmapFactory.decodeByteArray(data, 0, data.length)
+        assert(newBitmap != null)
+        overlayView.setImageBitmap(newBitmap)
+        // Free up the memory from the previous overlay
+        if (overlayBitmap isDefined) overlayBitmap.get.recycle
+        overlayBitmap = Some(newBitmap)
 
         camera.startPreview
       }
