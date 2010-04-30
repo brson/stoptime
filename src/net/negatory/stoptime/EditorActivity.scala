@@ -128,6 +128,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         else defaultPictureSize
       case null => defaultPictureSize
     }
+    Log.i("Using picture size " + width + "x" + height)
     cameraParams.setPictureSize(width, height)
 
 
