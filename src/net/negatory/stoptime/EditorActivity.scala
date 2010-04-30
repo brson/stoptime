@@ -90,7 +90,33 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   def configureCameraAndViewDimensions(surfaceView: SurfaceView, frameImage: ImageView, camera: Camera) {
-    new PreviewCalculator(this).setLayoutParams(surfaceView, frameImage, camera)
+
+    val maxPreviewSize: (Int, Int) = {
+      val display = getWindowManager.getDefaultDisplay
+      (display.getWidth, display.getHeight)
+    }
+    // Assuming that the display size is a valid preview size
+    val previewSize: (Int, Int) = maxPreviewSize
+
+    // todo: wtf is up with this # syntax?
+    val (previewWidth, previewHeight) = previewSize
+    Log.i("Using preview size " + previewWidth + "x" + previewHeight)
+
+    val cameraParams: Camera#Parameters = camera.getParameters
+    // Configure the preview surface size
+    val svLayoutParams: LayoutParams = surfaceView.getLayoutParams
+    svLayoutParams.width = previewWidth
+    svLayoutParams.height = previewHeight
+    surfaceView.setLayoutParams(svLayoutParams)
+
+    // Configure the frame overlay size. Note that a device may have preview sizes
+    // and picture sizes with different aspect ratios. We may need to do more
+    // calculation here.
+    val ivLayoutParams: LayoutParams = frameImage.getLayoutParams
+    ivLayoutParams.width = previewWidth
+    ivLayoutParams.height = previewHeight
+    frameImage.setLayoutParams(ivLayoutParams)
+
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
@@ -192,34 +218,3 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
 }
 
-
-class PreviewCalculator(activity: Activity) extends AnyRef with Logging {
-
-  def setLayoutParams(surfaceView: SurfaceView, frameImage: ImageView, camera: Camera) {
-    // todo: wtf is up with this # syntax?
-    val cameraParams: Camera#Parameters = camera.getParameters
-    val (previewWidth, previewHeight) = calculatePreviewSize(cameraParams)
-    Log.i("Using preview size " + previewWidth + "x" + previewHeight)
-    val svLayoutParams: LayoutParams = surfaceView.getLayoutParams
-    svLayoutParams.width = previewWidth
-    svLayoutParams.height = previewHeight
-    surfaceView.setLayoutParams(svLayoutParams)
-    val ivLayoutParams: LayoutParams = frameImage.getLayoutParams
-    ivLayoutParams.width = previewWidth
-    ivLayoutParams.height = previewHeight
-    frameImage.setLayoutParams(ivLayoutParams)
-  }
-
-  def calculatePreviewSize(params: Camera#Parameters): (Int, Int) = {
-
-    val default = maxPreviewSize
-
-    default
-  }
-
-  private def maxPreviewSize: (Int, Int) = {
-
-    val display = activity.getWindowManager.getDefaultDisplay
-    (display.getWidth, display.getHeight)
-  }
-}
