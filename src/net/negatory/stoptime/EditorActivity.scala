@@ -117,6 +117,19 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     ivLayoutParams.height = previewHeight
     frameImage.setLayoutParams(ivLayoutParams)
 
+    val defaultPictureSize = (200, 100)
+    val (width, height) = cameraParams.getSupportedPictureSizes match {
+      case sizes: java.util.List[_] =>
+        if (sizes.size > 0) {
+          val size = sizes.get(sizes.size - 1)
+          (size.width, size.height)
+        }
+        else defaultPictureSize
+      case null => defaultPictureSize
+    }
+    cameraParams.setPictureSize(width, height)
+
+
   }
 
   override def surfaceDestroyed(holder: SurfaceHolder) {
