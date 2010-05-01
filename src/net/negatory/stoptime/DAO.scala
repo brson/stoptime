@@ -21,12 +21,7 @@ private object StoptimeOpenHelper {
 
 class DAO(context: Context) extends AnyRef with Logging {
 
-  def newScene: Scene = {
-    val sceneId = createScene
-    loadScene(sceneId)
-  }
-
-  private def createScene: Int = {
+  def createScene: Int = {
     val dbHelper = new StoptimeOpenHelper(context)
     val db = dbHelper.getWritableDatabase
     db.execSQL("insert into scene default values")
@@ -39,7 +34,7 @@ class DAO(context: Context) extends AnyRef with Logging {
     newSceneId
   }
 
-  private def loadScene(sceneId: Int): Scene = {
+  def loadScene(sceneId: Int): Scene = {
     // TODO
     new Scene(sceneId)
   }
