@@ -1,6 +1,6 @@
-package net.negatory.stoptime;
+package net.negatory.stoptime
 
-import android.test.ActivityInstrumentationTestCase2;
+import android.test.ActivityInstrumentationTestCase2
 
 /**
  * This is a simple framework for a test of an Application.  See
@@ -12,10 +12,9 @@ import android.test.ActivityInstrumentationTestCase2;
  * -e class net.negatory.stoptime.EditorActivityTest \
  * net.negatory.stoptime.tests/android.test.InstrumentationTestRunner
  */
-public class EditorActivityTest extends ActivityInstrumentationTestCase2<EditorActivity> {
+class EditorActivityTest
+        extends ActivityInstrumentationTestCase2[EditorActivity]("net.negatory.stoptime", classOf[EditorActivity]) {
 
-    public EditorActivityTest() {
-        super("net.negatory.stoptime", EditorActivity.class);
-    }
+
 
 }
