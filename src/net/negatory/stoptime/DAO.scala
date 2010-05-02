@@ -3,8 +3,8 @@ package net.negatory.stoptime
 import android.database.sqlite.{SQLiteOpenHelper, SQLiteDatabase}
 import android.content.Context
 
-class StoptimeOpenHelper(context: Context)
-  extends SQLiteOpenHelper(context, "stoptime", null, StoptimeOpenHelper.version) {
+class StoptimeOpenHelper(context: Context, dbName: String)
+  extends SQLiteOpenHelper(context, dbName, null, StoptimeOpenHelper.version) {
 
   override def onCreate(db: SQLiteDatabase) {
     db.execSQL("create table scene (id integer primary key autoincrement)")
@@ -19,10 +19,15 @@ private object StoptimeOpenHelper {
   val version: Int = 1
 }
 
-class DAO(context: Context) extends AnyRef with Logging {
+// dbName may be null to create an in-memory database
+class DAO(context: Context, dbName: String) extends AnyRef with Logging {
 
-  val dbHelper = new StoptimeOpenHelper(context)
+  val dbHelper = new StoptimeOpenHelper(context, dbName)
   val db = dbHelper.getWritableDatabase
+
+  def close() {
+    db.close
+  }
 
   def createScene: Int = {
 

@@ -43,7 +43,7 @@ class StoptimeActivity extends ListActivity {
   }
 
   def createScene: Int = {
-    val dbHelper = new StoptimeOpenHelper(this)
+    val dbHelper = new StoptimeOpenHelper(this, "stoptime")
     val db = dbHelper.getWritableDatabase
     db.execSQL("insert into scene default values")
     val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
