@@ -53,6 +53,6 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
 
   def loadFrame(sceneId: Int, frameId: Int): Frame = {
     // TODO
-    new Frame
+    new Frame(sceneId, frameId, null)
   }
 }
