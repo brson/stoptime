@@ -26,7 +26,8 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     super.onCreate(savedInstanceState)
 
-    sceneStore = new SceneStore(this)
+    val dao = new DAO(this, "stoptime")
+    sceneStore = new SceneStore(dao)
     
     getWindow().setFormat(PixelFormat.TRANSLUCENT)
     requestWindowFeature(Window.FEATURE_NO_TITLE)

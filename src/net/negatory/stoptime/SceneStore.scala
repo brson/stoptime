@@ -4,9 +4,7 @@ import android.content.Context
 
 
 
-class SceneStore(context: Context) {
-
-  val dao = new DAO(context, "stoptime")
+class SceneStore(val dao: DAO) {
 
   def newScene: Scene = {
     val id = dao.createScene
