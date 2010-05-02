@@ -72,6 +72,6 @@
 	     classname="com.ergonlabs.ScalaForAndroid.SetupScalaTask"
 	     classpathref="android.antlibs" />
 
-    <setupscala sfapath="../../scalaforandroid" />
+    <setupscala sfapath="../scalaforandroid" />
 
 </project>
