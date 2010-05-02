@@ -21,9 +21,11 @@ private object StoptimeOpenHelper {
 
 class DAO(context: Context) extends AnyRef with Logging {
 
+  val dbHelper = new StoptimeOpenHelper(context)
+  val db = dbHelper.getWritableDatabase
+
   def createScene: Int = {
-    val dbHelper = new StoptimeOpenHelper(context)
-    val db = dbHelper.getWritableDatabase
+
     db.execSQL("insert into scene default values")
     val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
     cursor.moveToNext
@@ -36,6 +38,16 @@ class DAO(context: Context) extends AnyRef with Logging {
 
   def loadScene(sceneId: Int): Scene = {
     // TODO
-    new Scene(sceneId)
+    new Scene(sceneId, this)
+  }
+
+  def createFrame(sceneId: Int, imageData: Array[Byte]): Int = {
+    // TODO
+    0
+  }
+
+  def loadFrame(sceneId: Int, frameId: Int): Frame = {
+    // TODO
+    new Frame
   }
 }

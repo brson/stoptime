@@ -1,12 +1,13 @@
 package net.negatory.stoptime
 
-class Scene(val id: Int) extends AnyRef with Logging {
-  def appendFrame(data: Array[Byte]) {
-    Log.d("Appending frame to scene")
-    // TODO                          
+class Scene(val id: Int, dao: DAO) extends AnyRef with Logging {
+  def appendFrame(imageData: Array[Byte]): Frame = {
+    Log.d("Appending frame to scene " + id)
+    val frameId = dao.createFrame(id, imageData)
+    return dao.loadFrame(id, frameId)
   }
 }
 
 object Scene {
-  val DefaultScene = new Scene(-1)
+  val DefaultScene = new Scene(-1, null)
 }
