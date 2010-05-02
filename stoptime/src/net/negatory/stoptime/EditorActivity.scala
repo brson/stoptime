@@ -16,7 +16,7 @@ import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private var camera: Option[Camera] = None
-  private var sceneStore: SceneStore = new SceneStore(this)
+  private var sceneStore: SceneStore = null
   private var scene: Scene = Scene.DefaultScene
   private var previewSurface: SurfaceView = null
   private var overlayView: ImageView = null
@@ -26,6 +26,8 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     super.onCreate(savedInstanceState)
 
+    sceneStore = new SceneStore(this)
+    
     getWindow().setFormat(PixelFormat.TRANSLUCENT)
     requestWindowFeature(Window.FEATURE_NO_TITLE)
     getWindow().setFlags(
