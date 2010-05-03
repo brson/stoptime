@@ -29,7 +29,11 @@ class DAOTest extends AndroidTestCase {
 
     val sceneId = dao.createScene
     val frameId = dao.createFrame(sceneId, fakeFrameData)
-    val frame = dao.loadFrame(sceneId, frameId)
+    val frame = dao.loadFrame(frameId)
+
+    assert(frame.id == frameId)
+    assert(frame.sceneId == sceneId)
+    // todo: test that the image data is returned correctly
 
     dao.close
   }

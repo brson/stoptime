@@ -61,8 +61,16 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
     newFrameId
   }
 
-  def loadFrame(frameId: Int, sceneId: Int): Frame = {
-    // TODO
-    new Frame(frameId, sceneId, null)
+  def loadFrame(frameId: Int): Frame = {
+
+    val cursor = db.rawQuery("select sceneId, frameData from frame where id=?",
+      Array[String](frameId.toString))
+    cursor.moveToNext
+    assert(!cursor.isAfterLast, "Didn't find the requested frame")
+
+    val sceneId = cursor.getInt(0)
+    val frameData = cursor.getBlob(1)
+    cursor.close
+    new Frame(frameId, sceneId, frameData)
   }
 }
