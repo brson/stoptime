@@ -2,13 +2,19 @@ package net.negatory.stoptime
 
 import android.database.sqlite.{SQLiteOpenHelper, SQLiteDatabase}
 import android.content.Context
+import java.nio.ByteBuffer
+import java.util.EnumSet
+import android.os.Environment
+import java.io.{FileInputStream, FileOutputStream, IOException, File}
+import runtime.RichInt
+import java.lang.Integer
 
 class StoptimeOpenHelper(context: Context, dbName: String)
   extends SQLiteOpenHelper(context, dbName, null, StoptimeOpenHelper.version) {
 
   override def onCreate(db: SQLiteDatabase) {
     db.execSQL("create table scene (id integer primary key autoincrement)")
-    db.execSQL("create table frame (id integer primary key autoincrement, sceneId integer, frameData blob, " +
+    db.execSQL("create table frame (id integer primary key autoincrement, sceneId integer, " +
       "foreign key(sceneId) references scene(id))")
   }
 
@@ -47,7 +53,7 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
     new Scene(sceneId, this)
   }
 
-  def createFrame(sceneId: Int, imageData: Array[Byte]): Int = {
+  def createFrame(sceneId: Int, frameData: Array[Byte]): Int = {
     // todo need a transaction
     db.execSQL("insert into frame default values")
     val cursor = db.rawQuery("select id from frame where rowid=last_insert_rowid()", null)
@@ -55,22 +61,75 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
     val newFrameId = cursor.getInt(0)
 
     cursor.close
-    db.execSQL("update frame set sceneId=?, frameData=? where id=?",
-      Array[AnyRef](sceneId: java.lang.Integer, imageData, newFrameId: java.lang.Integer))
+    db.execSQL("update frame set sceneId=? where id=?",
+      Array[AnyRef](sceneId: java.lang.Integer, newFrameId: java.lang.Integer))
     Log.d("Created new frame for scene " + sceneId + " with id = " + newFrameId)
+
+    saveFrameToFile(sceneId, newFrameId, frameData)
     newFrameId
   }
 
+
   def loadFrame(frameId: Int): Frame = {
 
-    val cursor = db.rawQuery("select sceneId, frameData from frame where id=?",
+    val cursor = db.rawQuery("select sceneId from frame where id=?",
       Array[String](frameId.toString))
     cursor.moveToNext
     assert(!cursor.isAfterLast, "Didn't find the requested frame")
 
     val sceneId = cursor.getInt(0)
-    val frameData = cursor.getBlob(1)
+    Log.d("Loaded frame has sceneId " + sceneId)
     cursor.close
+    val frameData = loadFrameFromFile(sceneId, frameId)
     new Frame(frameId, sceneId, frameData)
+  }
+
+
+  private def saveFrameToFile(sceneId: Int, frameId: Int, frameData: Array[Byte]) {
+
+    try {
+      val frameFile = getFrameFile(sceneId, frameId)
+      val fileStream: FileOutputStream = new FileOutputStream(frameFile)
+
+      try {
+        Log.d("Writing " + frameData.length + " bytes to frame file " + frameFile.toString)
+        fileStream.write(frameData)
+      }
+      finally {
+        fileStream.close
+      }
+    }
+    catch {
+      case e: IOException => throw e
+    }
+  }
+
+  private def loadFrameFromFile(sceneId: Int, frameId: Int): Array[Byte] = {
+    try {
+      val frameFile = getFrameFile(sceneId, frameId)
+      val fileStream: FileInputStream = new FileInputStream(frameFile)
+
+      try {
+        val frameData: Array[Byte] = new Array[Byte](frameFile.length.toInt)
+        Log.d("Reading " + frameData.length + " bytes from frame file " + frameFile.toString)
+        fileStream.read(frameData)
+        frameData
+      }
+      finally {
+        fileStream.close
+      }
+    }
+    catch {
+      case e: IOException => throw e
+    }
+  }
+
+  private def getFrameFile(sceneId: Int, frameId: Int): File = {
+
+    val root: File = Environment.getExternalStorageDirectory
+    val frameFileName = String.format("%04X-%04X", Array[AnyRef](sceneId: Integer, frameId: Integer)) + ".jpg"
+    val storageDir = new File(root, "flipbook")
+    storageDir.mkdirs // TODO This side affect doesn't belong here
+    new File(storageDir, frameFileName)
   }
 }

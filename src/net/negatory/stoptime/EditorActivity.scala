@@ -212,7 +212,12 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
         scene = initializeScene
 
-        scene.appendFrame(data)
+        try {
+          scene.appendFrame(data)
+        }
+        catch {
+          case e => throw e // todo: Error handling
+        }
 
         val newBitmap = BitmapFactory.decodeByteArray(data, 0, data.length)
         assert(newBitmap != null)
