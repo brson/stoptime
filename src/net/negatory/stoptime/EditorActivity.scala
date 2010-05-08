@@ -15,6 +15,7 @@ import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
+  private var dao: DAO = null
   private var camera: Option[Camera] = None
   private var sceneStore: SceneStore = null
   private var scene: Scene = Scene.DefaultScene
@@ -26,7 +27,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     super.onCreate(savedInstanceState)
 
-    val dao = new DAO(this, "stoptime")
+    dao = new DAO(this, "stoptime")
     sceneStore = new SceneStore(dao)
     
     getWindow().setFormat(PixelFormat.TRANSLUCENT)
@@ -79,6 +80,11 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => error("Failed to find overlay Button")
     }
 
+  }
+
+  override def onDestroy() {
+    super.onDestroy
+    dao.close
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
