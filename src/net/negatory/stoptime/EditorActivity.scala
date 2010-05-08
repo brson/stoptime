@@ -80,6 +80,15 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       case _ => error("Failed to find overlay Button")
     }
 
+    findViewById(R.id.playback_button) match {
+      case b: Button =>
+        b.setOnClickListener(new OnClickListener {
+          def onClick(v: View) {
+            beginPlayback
+          }
+        })
+    }
+
   }
 
   override def onDestroy() {
@@ -250,6 +259,10 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   }
 
   private def initializeScene: Scene = if (scene == Scene.DefaultScene) sceneStore.newScene else scene
+
+  private def beginPlayback: Unit = {
+    
+  }
 
 }
 

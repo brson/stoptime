@@ -32,10 +32,13 @@
                   android:layout_height="wrap_content">
 
         <Button android:id="@+id/snapshot_button"
-                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Test"/>
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Snapshot"/>
 
         <Button android:id="@+id/overlay_button"
                 android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Overlay"/>
+
+        <Button android:id="@+id/playback_button"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Playback"/>
         
     </LinearLayout>
     
