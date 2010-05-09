@@ -9,7 +9,7 @@ import android.content.res.Configuration
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.view.View.OnClickListener
-import collection.jcl.MutableIterator
+import collection.JavaConversions._
 import android.widget.{ImageView, Button}
 import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 
@@ -192,7 +192,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     Log.i("Supported picture sizes:")
     params.getSupportedPictureSizes match {
       case supportedPictureSizes: java.util.List[_] =>
-        for (size <- new MutableIterator.Wrapper(supportedPictureSizes.iterator)) {
+        for (size <- supportedPictureSizes) {
           Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null
@@ -202,7 +202,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     Log.i("Supported preview sizes:")
     params.getSupportedPreviewSizes match {
       case supportedPreviewSizes: java.util.List[_] =>
-        for (size <- new MutableIterator.Wrapper(supportedPreviewSizes.iterator)) {
+        for (size <- supportedPreviewSizes) {
           Log.i(size.width + "x" + size.height)
         }
       // Emulator might return null

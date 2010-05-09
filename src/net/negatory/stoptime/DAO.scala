@@ -127,7 +127,7 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
   private def getFrameFile(sceneId: Int, frameId: Int): File = {
 
     val root: File = Environment.getExternalStorageDirectory
-    val frameFileName = String.format("%04X-%04X", Array[AnyRef](sceneId: Integer, frameId: Integer)) + ".jpg"
+    val frameFileName = "%04X-%04X".format(sceneId, frameId) + ".jpg"
     val storageDir = new File(root, "flipbook")
     storageDir.mkdirs // TODO This side affect doesn't belong here
     new File(storageDir, frameFileName)

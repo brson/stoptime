@@ -46,6 +46,7 @@
         <pathelement path="${sdk.dir}/sfa/libs/scala-library.jar" />
         <pathelement path="${sdk.dir}/sfa/libs/scala-compiler.jar" />
         <pathelement path="${sdk.dir}/sfa/libs/proguard.jar" />
+        <pathelement path="${sdk.dir}/sfa/libs/fjbg.jar" />
     </path>
 
     <taskdef name="setup"
@@ -72,6 +73,6 @@
 	     classname="com.ergonlabs.ScalaForAndroid.SetupScalaTask"
 	     classpathref="android.antlibs" />
 
-    <setupscala sfapath="../scalaforandroid" />
+    <setupscala />
 
 </project>
