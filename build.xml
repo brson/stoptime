@@ -46,7 +46,6 @@
         <pathelement path="${sfa.dir}/libs/scala-library.jar" />
         <pathelement path="${sfa.dir}/libs/scala-compiler.jar" />
         <pathelement path="${sfa.dir}/libs/proguard.jar" />
-        <pathelement path="${sfa.dir}/libs/fjbg.jar" />
     </path>
 
     <taskdef name="setup"

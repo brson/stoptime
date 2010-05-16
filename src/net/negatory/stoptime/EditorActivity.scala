@@ -1,7 +1,6 @@
 package net.negatory.stoptime
 
 import android.app.Activity
-import android.os.Bundle
 import android.hardware.Camera
 import android.view.ViewGroup.LayoutParams
 import android.view._
@@ -10,10 +9,13 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.view.View.OnClickListener
 import collection.JavaConversions._
-import android.widget.{ImageView, Button}
 import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
+import android.os.{Message, Handler, Bundle}
+import android.widget.{Toast, ImageView, Button}
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
+
+  private val OVERLAY_ALPHA = 64
 
   private var dao: DAO = null
   private var camera: Option[Camera] = None
@@ -26,7 +28,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   override def onCreate(savedInstanceState: Bundle) {
 
     super.onCreate(savedInstanceState)
-
+    
     dao = new DAO(this, "stoptime")
     sceneStore = new SceneStore(dao)
     
@@ -52,7 +54,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     overlayView = findViewById(R.id.image_frame) match {
       case iv: ImageView =>
-        iv.setAlpha(64)
+        iv.setAlpha(OVERLAY_ALPHA)
         iv
       case _ => error("Failed to find ImageView for frame display")  
     }
@@ -94,6 +96,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   override def onDestroy() {
     super.onDestroy
     dao.close
+    if (overlayBitmap.isDefined) overlayBitmap.get.recycle
   }
 
   override def surfaceCreated(holder: SurfaceHolder) {
@@ -117,7 +120,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     // Assuming that the display size is a valid preview size
     val previewSize: (Int, Int) = maxPreviewSize
 
-    // todo: wtf is up with this # syntax?
     val (previewWidth, previewHeight) = previewSize
     Log.i("Using preview size " + previewWidth + "x" + previewHeight)
 
@@ -236,10 +238,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
         val newBitmap = BitmapFactory.decodeByteArray(data, 0, data.length)
         assert(newBitmap != null)
-        overlayView.setImageBitmap(newBitmap)
-        // Free up the memory from the previous overlay
-        if (overlayBitmap isDefined) overlayBitmap.get.recycle
-        overlayBitmap = Some(newBitmap)
+        replaceFrameBitmap(newBitmap)
 
         camera.startPreview
       }
@@ -258,10 +257,31 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
   }
 
+  private def replaceFrameBitmap(bitmap: Bitmap) {
+    overlayView.setImageBitmap(bitmap)
+    // Free up the memory from the previous overlay
+    if (overlayBitmap isDefined) overlayBitmap.get.recycle
+    overlayBitmap = Some(bitmap)
+  }
+
   private def initializeScene: Scene = if (scene == Scene.DefaultScene) sceneStore.newScene else scene
 
   private def beginPlayback: Unit = {
-    
+    Log.d("Beginning playback")
+
+    val playbackCallback = new Handler.Callback {
+      override def handleMessage(msg: Message) = {
+        Log.d("Handling playback message")
+        msg.what match {
+          case PlaybackActor.PLAYFRAME =>
+            overlayView.setAlpha(255)
+            replaceFrameBitmap((msg.obj.asInstanceOf[Frame]).createFrameBitmap)
+        }
+        true
+      }
+    }
+
+    new PlaybackActor(dao, scene, new Handler(playbackCallback)).start
   }
 
 }

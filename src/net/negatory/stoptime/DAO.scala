@@ -5,9 +5,9 @@ import android.content.Context
 import java.nio.ByteBuffer
 import java.util.EnumSet
 import android.os.Environment
-import java.io.{FileInputStream, FileOutputStream, IOException, File}
 import runtime.RichInt
 import java.lang.Integer
+import java.io._
 
 class StoptimeOpenHelper(context: Context, dbName: String)
   extends SQLiteOpenHelper(context, dbName, null, StoptimeOpenHelper.version) {
@@ -26,6 +26,8 @@ class StoptimeOpenHelper(context: Context, dbName: String)
 private object StoptimeOpenHelper {
   val version: Int = 1
 }
+
+abstract class PlaybackIterator extends Iterator[Frame] with Closeable
 
 // dbName may be null to create an in-memory database
 class DAO(context: Context, dbName: String) extends AnyRef with Logging {
@@ -72,8 +74,9 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
 
   def loadFrame(frameId: Int): Frame = {
 
-    val cursor = db.rawQuery("select sceneId from frame where id=?",
-      Array[String](frameId.toString))
+    val cursor = db.rawQuery(
+      "select sceneId from frame where id=?"
+      , Array[String](frameId.toString))
     cursor.moveToNext
     assert(!cursor.isAfterLast, "Didn't find the requested frame")
 
@@ -84,6 +87,25 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
     new Frame(frameId, sceneId, frameData)
   }
 
+  def readFrames(sceneId: Int): PlaybackIterator = {
+
+    val cursor = db.rawQuery(
+      "select id from frame where sceneId=? order by id"
+      , Array[String](sceneId.toString));
+
+    new PlaybackIterator {
+      override def hasNext =  !(cursor.isLast || cursor.isAfterLast)
+
+      override def next = {
+        cursor.moveToNext
+        val frameId = cursor.getInt(0)
+        Log.d("Loading frame " + frameId + " for playback")
+        loadFrame(frameId)
+      }
+
+      override def close = cursor.close
+    }
+  }
 
   private def saveFrameToFile(sceneId: Int, frameId: Int, frameData: Array[Byte]) {
 
@@ -132,4 +154,6 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
     storageDir.mkdirs // TODO This side affect doesn't belong here
     new File(storageDir, frameFileName)
   }
+
+
 }
