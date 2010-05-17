@@ -42,10 +42,10 @@
         <pathelement path="${sdk.dir}/tools/lib/androidprefs.jar" />
         <pathelement path="${sdk.dir}/tools/lib/apkbuilder.jar" />
         <pathelement path="${sdk.dir}/tools/lib/jarutils.jar" />
-        <pathelement path="${sfa.dir}/bin/ScalaForAndroid.jar" />
-        <pathelement path="${sfa.dir}/libs/scala-library.jar" />
-        <pathelement path="${sfa.dir}/libs/scala-compiler.jar" />
-        <pathelement path="${sfa.dir}/libs/proguard.jar" />
+        <pathelement path="${sfa.dir}/ScalaForAndroid.jar" />
+        <pathelement path="${sfa.dir}/scala-library.jar" />
+        <pathelement path="${sfa.dir}/scala-compiler.jar" />
+        <pathelement path="${sfa.dir}/proguard.jar" />
     </path>
 
     <taskdef name="setup"
