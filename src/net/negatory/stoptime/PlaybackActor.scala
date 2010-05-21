@@ -3,23 +3,34 @@ package net.negatory.stoptime
 import actors.Actor
 import android.os.{Message, Handler}
 
-class PlaybackActor(dao: DAO, scene: Scene, handler: Handler) extends Actor with Logging {
+case class NextFrame(handler: Handler)
 
+class PlaybackActor(dao: DAO, scene: Scene) extends Actor with Logging {
+
+  start()
 
   def act() = {
     Log.d("Beggining playback of scene " + scene.id)
 
     val playbackIterator = dao.readFrames(scene.id)
-    try {
-      for (frame <- playbackIterator) {
-        val playFrameMsg = Message.obtain(handler, PlaybackActor.PLAYFRAME, frame)
-        handler.sendMessage(playFrameMsg)
-        Thread.sleep(1000)
+
+    loopWhile(playbackIterator.hasNext) {
+
+      val frame = playbackIterator.next
+
+      react {
+        case NextFrame(handler) =>
+          val playFrameMsg = Message.obtain(handler, PlaybackActor.PLAYFRAME, frame)
+          handler.sendMessage(playFrameMsg)
       }
-      Log.d("Finished playback of scene " + scene.id)
-    }
-    finally {
-      playbackIterator.close      
+    } andThen {
+      playbackIterator.close
+      react {
+        case NextFrame(handler) =>
+          Log.d("Finished playback of scene " + scene.id)
+          val stopMsg = Message.obtain(handler, PlaybackActor.STOP)
+          handler.sendMessage(stopMsg)
+      }
     }
 
   }
@@ -28,4 +39,5 @@ class PlaybackActor(dao: DAO, scene: Scene, handler: Handler) extends Actor with
 
 object PlaybackActor {
   val PLAYFRAME = 1
+  val STOP = 2
 }

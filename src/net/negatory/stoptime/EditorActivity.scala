@@ -269,19 +269,29 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   private def beginPlayback: Unit = {
     Log.d("Beginning playback")
 
-    val playbackCallback = new Handler.Callback {
-      override def handleMessage(msg: Message) = {
-        Log.d("Handling playback message")
-        msg.what match {
-          case PlaybackActor.PLAYFRAME =>
-            overlayView.setAlpha(255)
-            replaceFrameBitmap((msg.obj.asInstanceOf[Frame]).createFrameBitmap)
+    val playbackActor = new PlaybackActor(dao, scene)
+    lazy val playbackHandler: Handler = {
+
+      val playbackCallback: Handler.Callback = new Handler.Callback {
+        override def handleMessage(msg: Message) = {
+          Log.d("Handling playback message")
+          msg.what match {
+            case PlaybackActor.PLAYFRAME =>
+              overlayView.setAlpha(255)
+              replaceFrameBitmap((msg.obj.asInstanceOf[Frame]).createFrameBitmap)
+              playbackActor ! NextFrame(playbackHandler)
+            case PlaybackActor.STOP =>
+              ()
+          }
+          true
         }
-        true
+
       }
+
+      new Handler(playbackCallback)
     }
 
-    new PlaybackActor(dao, scene, new Handler(playbackCallback)).start
+    playbackActor ! NextFrame(playbackHandler)
   }
 
 }
