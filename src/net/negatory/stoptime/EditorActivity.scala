@@ -12,6 +12,7 @@ import collection.JavaConversions._
 import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 import android.os.{Message, Handler, Bundle}
 import android.widget.{Toast, ImageView, Button}
+import java.io.ByteArrayOutputStream
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -24,6 +25,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
   private var previewSurface: SurfaceView = null
   private var overlayView: ImageView = null
   private var overlayBitmap: Option[Bitmap] = None
+  private var previewSize: (Int, Int) = null
 
   override def onCreate(savedInstanceState: Bundle) {
 
@@ -118,7 +120,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
       (display.getWidth, display.getHeight)
     }
     // Assuming that the display size is a valid preview size
-    val previewSize: (Int, Int) = maxPreviewSize
+    previewSize = maxPreviewSize
 
     val (previewWidth, previewHeight) = previewSize
     Log.i("Using preview size " + previewWidth + "x" + previewHeight)
@@ -150,7 +152,6 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
     Log.i("Using picture size " + width + "x" + height)
     cameraParams.setPictureSize(width, height)
-
 
   }
 
@@ -229,16 +230,20 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
         scene = initializeScene
 
-        try {
-          scene.appendFrame(data)
-        }
-        catch {
-          case e => throw e // todo: Error handling
-        }
-
         val newBitmap = BitmapFactory.decodeByteArray(data, 0, data.length)
         assert(newBitmap != null)
-        replaceFrameBitmap(newBitmap)
+        val (width, height) = previewSize
+        val smallBitmap = Bitmap.createScaledBitmap(newBitmap, width, height, true)
+        replaceFrameBitmap(smallBitmap)
+        val byteStream = new ByteArrayOutputStream
+        smallBitmap.compress(Bitmap.CompressFormat.JPEG, 0, byteStream)
+        val smallData = byteStream.toByteArray
+
+        try {
+          scene.appendFrame(smallData)
+        } catch {
+          case e => throw e // todo: Error handling
+        }
 
         camera.startPreview
       }
@@ -281,12 +286,15 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
               replaceFrameBitmap((msg.obj.asInstanceOf[Frame]).createFrameBitmap)
               playbackActor ! NextFrame(playbackHandler)
             case PlaybackActor.STOP =>
+              overlayView.setAlpha(OVERLAY_ALPHA)
+              camera.get.startPreview
               ()
           }
           true
         }
 
       }
+      camera.get.stopPreview
 
       new Handler(playbackCallback)
     }
