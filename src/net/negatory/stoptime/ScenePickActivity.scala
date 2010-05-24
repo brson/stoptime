@@ -7,7 +7,7 @@ import android.view.{MenuItem, Menu, View}
 import android.content.{Intent}
 
 
-class StoptimeActivity extends ListActivity {
+class ScenePickActivity extends ListActivity {
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
 

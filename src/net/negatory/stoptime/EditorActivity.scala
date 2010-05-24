@@ -5,14 +5,15 @@ import android.hardware.Camera
 import android.view.ViewGroup.LayoutParams
 import android.view._
 import android.content.res.Configuration
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.view.View.OnClickListener
+import android.view.Menu.NONE
 import collection.JavaConversions._
 import android.graphics.{BitmapFactory, PixelFormat, Bitmap}
 import android.os.{Message, Handler, Bundle}
 import android.widget.{Toast, ImageView, Button}
 import java.io.ByteArrayOutputStream
+import android.content.{Intent, Context}
 
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
@@ -236,7 +237,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
         val smallBitmap = Bitmap.createScaledBitmap(newBitmap, width, height, true)
         replaceFrameBitmap(smallBitmap)
         val byteStream = new ByteArrayOutputStream
-        smallBitmap.compress(Bitmap.CompressFormat.JPEG, 0, byteStream)
+        smallBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteStream)
         val smallData = byteStream.toByteArray
 
         try {
@@ -300,6 +301,22 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     }
 
     playbackActor ! NextFrame(playbackHandler)
+  }
+
+  override def onCreateOptionsMenu(menu: Menu): Boolean = {
+    super.onCreateOptionsMenu(menu)
+
+    menu.add(NONE, 0, NONE, "Scenes")
+
+    true
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+    case 0 =>
+      val intent = new Intent(this, classOf[ScenePickActivity])
+      startActivity(intent)
+      true
+    case _ => error("Unexpected menu item")
   }
 
 }
