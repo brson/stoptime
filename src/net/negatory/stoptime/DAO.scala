@@ -9,6 +9,8 @@ import runtime.RichInt
 import java.lang.Integer
 import java.io._
 import android.database.Cursor
+import AndroidKit.CursorIterator
+
 
 class StoptimeOpenHelper(context: Context, dbName: String)
   extends SQLiteOpenHelper(context, dbName, null, StoptimeOpenHelper.version) {
@@ -66,16 +68,14 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging with Clo
   def loadAllScenes: List[Scene] = {
     Log.d("Loading all scenes")
     val cursor = db.rawQuery("select id from scene order by id", null)
+
     try {
 
-      var sceneList: List[Scene] = Nil
-
-      while (cursor moveToNext) {
+      (for (c <- new CursorIterator(cursor)) yield {
         val sceneId = cursor.getInt(0)
         Log.d("Loading scene " + sceneId)
-        sceneList = new Scene(sceneId, this) :: sceneList
-      }
-      sceneList reverse
+        new Scene(sceneId, this)
+      }) toList
     } finally {
       cursor.close
     }
