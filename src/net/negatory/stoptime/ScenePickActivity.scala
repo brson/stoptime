@@ -12,12 +12,18 @@ class ScenePickActivity extends ListActivity {
     super.onCreate(savedInstanceState)
 
     setListAdapter (
+      // todo: Create ListAdapter
       new ArrayAdapter [String] (
         this,
         android.R.layout.simple_list_item_1,
-        Array ("scene1", "scene2")
+        getScenes
         )
       )
+  }
+
+  private def getScenes: Array[String] = {
+    val dao = new DAO(this)
+    for (scene <- dao.loadAllScenes.toArray) yield scene.id.toString
   }
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {

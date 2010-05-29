@@ -8,6 +8,7 @@ import android.os.Environment
 import runtime.RichInt
 import java.lang.Integer
 import java.io._
+import android.database.Cursor
 
 class StoptimeOpenHelper(context: Context, dbName: String)
   extends SQLiteOpenHelper(context, dbName, null, StoptimeOpenHelper.version) {
@@ -30,7 +31,11 @@ private object StoptimeOpenHelper {
 abstract class PlaybackIterator extends Iterator[Frame] with Closeable
 
 // dbName may be null to create an in-memory database
-class DAO(context: Context, dbName: String) extends AnyRef with Logging {
+class DAO(context: Context, dbName: String) extends AnyRef with Logging with Closeable {
+
+  def this(context: Context) {
+    this(context, "stoptime")
+  }
 
   val dbHelper = new StoptimeOpenHelper(context, dbName)
   val db = dbHelper.getWritableDatabase
@@ -43,16 +48,38 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging {
 
     db.execSQL("insert into scene default values")
     val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
-    cursor.moveToNext
-    val newSceneId = cursor.getInt(0)
-    Log.d("Created new scene with id = " + newSceneId)
-    cursor.close
-    newSceneId
+    try {
+      cursor.moveToNext
+      val newSceneId = cursor.getInt(0)
+      Log.d("Created new scene with id = " + newSceneId)
+      newSceneId
+    } finally {
+      cursor.close
+    }
   }
 
   def loadScene(sceneId: Int): Scene = {
     // TODO
     new Scene(sceneId, this)
+  }
+
+  def loadAllScenes: List[Scene] = {
+    Log.d("Loading all scenes")
+    val cursor = db.rawQuery("select id from scene order by id", null)
+    try {
+
+      var sceneList: List[Scene] = Nil
+
+      while (cursor moveToNext) {
+        val sceneId = cursor.getInt(0)
+        Log.d("Loading scene " + sceneId)
+        sceneList = new Scene(sceneId, this) :: sceneList
+      }
+      sceneList reverse
+    } finally {
+      cursor.close
+    }
+
   }
 
   def createFrame(sceneId: Int, frameData: Array[Byte]): Int = {

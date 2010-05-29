@@ -15,6 +15,7 @@ import android.widget.{Toast, ImageView, Button}
 import java.io.ByteArrayOutputStream
 import android.content.{Intent, Context}
 
+
 class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
   private val OVERLAY_ALPHA = 64
@@ -32,7 +33,7 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
 
     super.onCreate(savedInstanceState)
     
-    dao = new DAO(this, "stoptime")
+    dao = new DAO(this)
     sceneStore = new SceneStore(dao)
     
     getWindow().setFormat(PixelFormat.TRANSLUCENT)
