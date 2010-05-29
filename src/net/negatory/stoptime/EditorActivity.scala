@@ -103,6 +103,19 @@ class EditorActivity extends Activity with SurfaceHolder.Callback with Logging {
     if (overlayBitmap.isDefined) overlayBitmap.get.recycle
   }
 
+  override def onStart() {
+    super.onStart
+
+    val intent = getIntent
+    scene = intent.getData match {
+      case null => scene
+      case data =>
+        val sceneId = data.getFragment.toInt
+        Log.i("Editing scene " + sceneId)
+        new DAO(this).loadScene(sceneId)
+    }
+  }
+
   override def surfaceCreated(holder: SurfaceHolder) {
 
     assert(camera isEmpty)

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.{ListView, ArrayAdapter}
 import android.view.{MenuItem, Menu, View}
 import android.content.{Intent}
+import android.net.Uri
 
 
 class ScenePickActivity extends ListActivity {
@@ -27,7 +28,8 @@ class ScenePickActivity extends ListActivity {
   }
 
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
-    
+    val intent = new Intent("edit", Uri.fromParts("stoptime", "scene", getScenes apply(position) toString), this, classOf[EditorActivity])
+    startActivity(intent)
   }
 
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
@@ -41,22 +43,9 @@ class ScenePickActivity extends ListActivity {
   }
 
   def newScene {
-    val sceneId = createScene
 
     val intent = new Intent(this, classOf[EditorActivity])
-    intent.putExtra("sceneId", sceneId)
     startActivity(intent)
   }
 
-  def createScene: Int = {
-    val dbHelper = new StoptimeOpenHelper(this, "stoptime")
-    val db = dbHelper.getWritableDatabase
-    db.execSQL("insert into scene default values")
-    val cursor = db.rawQuery("select id from scene where rowid=last_insert_rowid()", null)
-    cursor.moveToNext
-    val newSceneId = cursor.getInt(0)
-    cursor.close
-    db.close
-    newSceneId
-  }
 }
