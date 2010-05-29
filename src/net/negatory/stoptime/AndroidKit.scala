@@ -14,4 +14,8 @@ object AndroidKit {
     }
 
   }
+
+  object CursorIterator {
+    def apply(cursor: Cursor) = new CursorIterator(cursor)
+  }
 }

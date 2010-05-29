@@ -71,8 +71,8 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging with Clo
 
     try {
 
-      (for (c <- new CursorIterator(cursor)) yield {
-        val sceneId = cursor.getInt(0)
+      (for (c <- CursorIterator(cursor)) yield {
+        val sceneId = c.getInt(0)
         Log.d("Loading scene " + sceneId)
         new Scene(sceneId, this)
       }) toList
