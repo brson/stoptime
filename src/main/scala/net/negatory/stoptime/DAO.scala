@@ -41,9 +41,16 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging with Clo
 
   val dbHelper = new StoptimeOpenHelper(context, dbName)
   val db = dbHelper.getWritableDatabase
+  def inMemory = dbName == null
+  def storageDirName = if (inMemory) "flipbook-tmp" else "flipbook"
 
   def close() {
     db.close
+    if (inMemory && (frameDir exists)) {
+      // Don't leave files behind when the user expects them to be 'in-memory'
+      frameDir.listFiles.foreach((f: File) => f.delete)
+      frameDir.delete
+    }
   }
 
   def createScene: Int = {
@@ -173,11 +180,14 @@ class DAO(context: Context, dbName: String) extends AnyRef with Logging with Clo
     }
   }
 
-  private def getFrameFile(sceneId: Int, frameId: Int): File = {
-
+  private def frameDir = {
     val root: File = Environment.getExternalStorageDirectory
+    new File(root, storageDirName)
+  }
+
+  private def getFrameFile(sceneId: Int, frameId: Int): File = {
     val frameFileName = "%04X-%04X".format(sceneId, frameId) + ".jpg"
-    val storageDir = new File(root, "flipbook")
+    val storageDir = frameDir
     storageDir.mkdirs // TODO This side affect doesn't belong here
     new File(storageDir, frameFileName)
   }
