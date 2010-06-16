@@ -22,6 +22,7 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
         case CreateScene =>
           Log.d("Creating scene")
           reply(SceneCreated(dao.createScene))
+        case LoadScene(sceneId) => reply(SceneLoaded(dao.loadScene(sceneId)))
         case LoadAllScenes => actor {
           loop {
             
@@ -42,7 +43,7 @@ object DataActor {
   case object CreateScene
   case class SceneCreated(sceneId: Int)
 
-  case object LoadScene
+  case class LoadScene(sceneId: Int)
   case class SceneLoaded(scene: Scene)
 
   case object LoadAllScenes
@@ -56,14 +57,25 @@ object DataActor {
   case class LoadAllFrames(sceneId: Int)
 }
 
-trait TestTools {
-  val timeout = 10000
-}
-
-import junit.framework.TestCase
 import junit.framework.Assert._
 
-class DataActorTest extends AndroidTestCase with TestTools {
+object TestTools {
+  val timeout = 30000  
+
+  def unexpectedMsg(doingWhat: String, msg: Any): Nothing = {
+    fail("Unexpected message %s: %s".format(doingWhat, msg))
+    throw new RuntimeException
+  }
+  def msgTimeout(doingWhat: String): Nothing = {
+    fail("Timeout while " + doingWhat)
+    throw new RuntimeException
+  }
+}
+
+
+class DataActorTest extends AndroidTestCase with Logging {
+
+  import DataActor._, TestTools._
 
   var dataActor: DataActor = null
 
@@ -76,10 +88,22 @@ class DataActorTest extends AndroidTestCase with TestTools {
   }
 
   def testCreateAndLoadScenes {
-    val sceneId = dataActor !? (timeout, DataActor.CreateScene) match {
-      case Some(DataActor.SceneCreated(sceneId)) => sceneId
-      case Some(msg) => fail("Scene not created: " + msg)
-      case None => fail("Timeout")
+    val sceneId: Int = dataActor !? (timeout, CreateScene) match {
+      case Some(SceneCreated(sceneId)) => sceneId
+      case Some(msg) => unexpectedMsg("creating scene", msg)
+      case None => msgTimeout("creating scene")
     }
+
+    val scene: Scene = dataActor !? (timeout, LoadScene(sceneId)) match {
+      case Some(SceneLoaded(scene)) => scene
+      case Some(msg) => unexpectedMsg("loading scene", msg)
+      case None => msgTimeout("creating scene")
+    }
+    assertEquals(sceneId, scene.id)
   }
+
+  def testLoadAllScenes {
+    
+  }
+
 }
