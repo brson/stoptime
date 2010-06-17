@@ -3,7 +3,7 @@ package net.negatory.stoptime
 import junit.framework.Assert.fail
 
 object TestTools {
-  val timeout = 30000
+  val timeout = 1000
 
   def unexpectedMsg(doingWhat: String, msg: Any): Nothing = {
     fail("Unexpected message %s: %s".format(doingWhat, msg))
