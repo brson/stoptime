@@ -6,6 +6,10 @@ import android.test.AndroidTestCase
 import actors.{TIMEOUT, Actor}
 import java.io.Closeable
 
+class WorkerActor extends Actor {
+  
+}
+
 class IteratorActor[T](iter: Iterator[T]) extends Actor with Iterator[T] {
 
   start
@@ -132,6 +136,7 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
         case LoadScene(sceneId) => reply(SceneLoaded(dao.loadScene(sceneId)))
         case LoadAllScenes =>
           val sceneIter = (dao loadAllScenes) iterator
+          // TODO this actor should run in the same thread as the DataActor
           val iteratorActor = new IteratorActor(sceneIter)
           reply(AllScenesLoaded(iteratorActor))          
         case Close =>
