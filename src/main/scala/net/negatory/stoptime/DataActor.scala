@@ -6,8 +6,25 @@ import android.test.AndroidTestCase
 import actors.{TIMEOUT, Actor}
 import java.io.Closeable
 
+case class Result[T](value: T)
+
 class WorkerActor extends Actor {
-  
+
+  start
+
+  override def act() {
+    import WorkerActor._
+
+    loop {
+      react {
+        case Run(fun) => reply(fun())
+      }
+    }
+  }
+}
+
+object WorkerActor {
+  case class Run[T](fun: () => T)
 }
 
 class IteratorActor[T](iter: Iterator[T]) extends Actor with Iterator[T] {
@@ -120,6 +137,9 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
 
   start
 
+  // All data access must be done by the worker, in a single thread
+  val worker = new WorkerActor
+
   private val dao = new DAO(context, dbName)
 
   def this(context: Context) {
@@ -128,19 +148,28 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
 
   override def act() {
     import DataActor._
+    import WorkerActor._
+
     loop {
       react {
         case CreateScene =>
           Log.d("Creating scene")
-          reply(SceneCreated(dao.createScene))
-        case LoadScene(sceneId) => reply(SceneLoaded(dao.loadScene(sceneId)))
+          val sceneId = (worker !? Run(() => dao.createScene)).asInstanceOf[Int]
+          reply(SceneCreated(sceneId))
+        case LoadScene(sceneId) =>
+          val scene = (worker !? Run(() => dao.loadScene(sceneId))).asInstanceOf[Scene]
+          reply(SceneLoaded(scene))
         case LoadAllScenes =>
-          val sceneIter = (dao loadAllScenes) iterator
-          // TODO this actor should run in the same thread as the DataActor
-          val iteratorActor = new IteratorActor(sceneIter)
+          val sceneList = (worker !? Run(() => dao.loadAllScenes)).asInstanceOf[List[Scene]]
+          val sceneIter = sceneList iterator
+          val delegateIter = new Iterator[Scene] {
+            override def hasNext = (worker !? Run(() => sceneIter.hasNext)).asInstanceOf[Boolean]
+            override def next = (worker !? Run(() => sceneIter.next)).asInstanceOf[Scene]
+          }
+          val iteratorActor = new IteratorActor(delegateIter)
           reply(AllScenesLoaded(iteratorActor))          
         case Close =>
-          dao.close
+          worker !? Run(() => dao.close)
           exit
       }
     }
