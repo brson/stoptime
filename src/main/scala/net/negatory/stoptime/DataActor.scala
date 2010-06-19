@@ -150,26 +150,28 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
     import DataActor._
     import WorkerActor._
 
+    def runWork[T](f: () => T): T = (worker !? Run(f)).asInstanceOf[T]
+
     loop {
       react {
         case CreateScene =>
           Log.d("Creating scene")
-          val sceneId = (worker !? Run(() => dao.createScene)).asInstanceOf[Int]
+          val sceneId = runWork(dao.createScene _)
           reply(SceneCreated(sceneId))
         case LoadScene(sceneId) =>
-          val scene = (worker !? Run(() => dao.loadScene(sceneId))).asInstanceOf[Scene]
+          val scene = runWork(() => dao.loadScene(sceneId))
           reply(SceneLoaded(scene))
         case LoadAllScenes =>
-          val sceneList = (worker !? Run(() => dao.loadAllScenes)).asInstanceOf[List[Scene]]
+          val sceneList = runWork(dao.loadAllScenes _)
           val sceneIter = sceneList iterator
           val delegateIter = new Iterator[Scene] {
-            override def hasNext = (worker !? Run(() => sceneIter.hasNext)).asInstanceOf[Boolean]
-            override def next = (worker !? Run(() => sceneIter.next)).asInstanceOf[Scene]
+            override def hasNext = runWork(sceneIter.hasNext _)
+            override def next = runWork(sceneIter.next _)
           }
           val iteratorActor = new IteratorActor(delegateIter)
           reply(AllScenesLoaded(iteratorActor))          
         case Close =>
-          worker !? Run(() => dao.close)
+          runWork(dao.close _)
           exit
       }
     }
