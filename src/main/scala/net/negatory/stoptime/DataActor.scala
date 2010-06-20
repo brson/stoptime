@@ -98,7 +98,7 @@ class DataActorTest extends AndroidTestCase with Logging {
   }
 
   override def tearDown = {
-    dataActor ! DataActor.Close
+    dataActor ! Close
   }
 
   def createScene: Int = dataActor !? (timeout, CreateScene) match {
@@ -129,6 +129,25 @@ class DataActorTest extends AndroidTestCase with Logging {
     val loadedIds = (sceneIter map ((s: Scene) => s.id)).toList
     assertEquals(sceneIds.length, loadedIds.length)
     (sceneIds zip loadedIds) foreach ( t => assertEquals(t._1, t._2))
+  }
+
+  def testCreateAndLoadFrame {
+    val sceneId = createScene
+    val frameData = Array[Byte](1, 2, 3)
+    val frameId = dataActor !? (timeout, CreateFrame(sceneId, frameData)) match {
+      case Some(FrameCreated(frameId)) => frameId
+      case Some(msg) => unexpectedMsg("creating frame", msg)
+      case None => msgTimeout("creating frame")
+    }
+    val frame = dataActor !? (timeout, LoadFrame(frameId)) match {
+      case Some(FrameLoaded(frame)) => frame
+      case Some(msg) => unexpectedMsg("loading frame", msg)
+      case None => msgTimeout("loading frame")
+    }
+    assertEquals(sceneId, frame.sceneId)
+    assertEquals(frameId, frame.id)
+    assertEquals(frameData length, frame.frameData length)
+    (frameData zip frame.frameData) foreach (t => assertEquals(t._1, t._2))
   }
 
 }
@@ -169,7 +188,15 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
             override def next = runWork(sceneIter.next _)
           }
           val iteratorActor = new IteratorActor(delegateIter)
-          reply(AllScenesLoaded(iteratorActor))          
+          reply(AllScenesLoaded(iteratorActor))
+        case CreateFrame(sceneId, frameData) =>
+          Log.d("Creating frame")
+          val frameId = runWork(() => dao.createFrame(sceneId, frameData))
+          reply(FrameCreated(frameId))
+        case LoadFrame(frameId) =>
+          Log.d("Loading frame")
+          val frame = runWork(() => dao.loadFrame(frameId))
+          reply(FrameLoaded(frame))
         case Close =>
           runWork(dao.close _)
           exit
