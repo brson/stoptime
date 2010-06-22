@@ -81,6 +81,7 @@ object DataActor {
   case class FrameLoaded(frame: Frame)
 
   case class LoadAllFrames(sceneId: Int)
+  case class AllFramesLoaded(iterator: IteratorActor[Frame] with Closeable)
 }
 
 
@@ -150,6 +151,21 @@ class DataActorTest extends AndroidTestCase with Logging {
     (frameData zip frame.frameData) foreach (t => assertEquals(t._1, t._2))
   }
 
+  def testLoadAllFrames {
+    val sceneId = createScene
+    val frameData = for (x <- 1 to 10) yield Array[Byte](1)
+    for (data <- frameData) dataActor ! CreateFrame(sceneId, data)
+    val frameIter = dataActor !? (timeout, LoadAllFrames(sceneId)) match {
+      case Some(AllFramesLoaded(iter)) => iter
+      case Some(msg) => unexpectedMsg("loading all frames", msg)
+      case None => msgTimeout("loading all frames")
+    }
+    val frameList: List[Frame] = frameIter.toList
+    assertEquals(frameData length, frameList length)
+    for ((frame, data) <- frameList zip frameData) {
+      (data zip frame.frameData) foreach (t => assertEquals(t._1, t._2))
+    }
+  }
 }
 
 class DataActor(context: Context, dbName: String) extends Actor with Logging {
@@ -197,6 +213,16 @@ class DataActor(context: Context, dbName: String) extends Actor with Logging {
           Log.d("Loading frame")
           val frame = runWork(() => dao.loadFrame(frameId))
           reply(FrameLoaded(frame))
+        case LoadAllFrames(sceneId) =>
+          val frameIter = runWork(() => dao.readFrames(sceneId))
+          val delegateIter = new Iterator[Frame] {
+            override def hasNext = runWork(frameIter.hasNext _)
+            override def next = runWork(frameIter.next _)
+          }
+          val iteratorActor = new IteratorActor(delegateIter) with Closeable {
+            override def close = runWork(frameIter.close _)
+          }
+          reply(AllFramesLoaded(iteratorActor))
         case Close =>
           runWork(dao.close _)
           exit
